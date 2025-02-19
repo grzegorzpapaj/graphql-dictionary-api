@@ -1,0 +1,71 @@
+type PolishWord {
+    id: ID!
+    word: String!
+    translations: [Translation!]!
+}
+
+type Translation {
+    id: ID!
+    englishWord: String!
+    polishWord: PolishWord!
+    exampleSentences: [ExampleSentence!]!
+}
+
+type ExampleSentence {
+    id: ID!
+    translation: Translation!
+    sentencePl: String!
+    sentenceEn: String!
+}
+
+type Query { 
+    polishWord(id: ID, word: String): PolishWord 
+    polishWords: [PolishWord] 
+    translation(id: ID!): Translation 
+    exampleSentence(id: ID!): ExampleSentence 
+    exampleSentences(englishWord: String): [ExampleSentence] 
+} 
+
+type Mutation { 
+    addPolishWord(polishWord: AddPolishWordInput!): PolishWord 
+    deletePolishWord(id: ID, word: String): PolishWord
+    updatePolishWord(id: ID, word: String, edits: EditPolishWordInput): PolishWord
+
+    addTranslation(polishWordId: ID, polishWord: String, translation: AddTranslationInput): Translation
+    deleteTranslation(id: ID, translation: String): Translation
+    updateTranslation(id: ID, translation: String, edits: EditTranslationInput): Translation
+
+    addExampleSentence(translationId: ID, translation: String, exampleSentence: AddExampleSentenceInput): ExampleSentence
+    deleteExampleSentence(id: ID): ExampleSentence
+    updateExampleSentence(id: ID, edits: EditExampleSentenceInput): ExampleSentence
+} 
+
+input AddExampleSentenceInput { 
+    sentencePl: String!  
+    sentenceEn: String!  
+}
+    
+input AddTranslationInput { 
+    englishWord: String!  
+    exampleSentences: [AddExampleSentenceInput!]!  
+}
+
+input AddPolishWordInput {
+    word: String!
+    translations: [AddTranslationInput!]!
+}
+
+input EditExampleSentenceInput { 
+    sentencePl: String
+    sentenceEn: String
+}
+    
+input EditTranslationInput { 
+    englishWord: String  
+    exampleSentences: [EditExampleSentenceInput!]
+}
+
+input EditPolishWordInput {
+    word: String
+    translations: [EditTranslationInput!]
+}
