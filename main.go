@@ -1,10 +1,11 @@
 package main
 
 import (
-	"os"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -20,7 +21,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 
 	db, err := database.Connect()
 	if err != nil {
@@ -40,17 +40,18 @@ func main() {
 
 	fmt.Printf("Inserted word '%s' with ID %d\n", word, id)
 
-	startServer()
+	startServer(db)
 }
 
-func startServer() {
+func startServer(db *sql.DB) {
 	port := os.Getenv("PORT")
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{
+		DB: db,
+	}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)
-
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
