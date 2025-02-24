@@ -30,7 +30,7 @@ func main() {
 
 	fmt.Println("Successfully connected to PostgreSQL")
 
-	word := "test4"
+	word := "test6"
 	insertQuery := "INSERT INTO polish_words (word) VALUES ($1) RETURNING id"
 
 	var id int

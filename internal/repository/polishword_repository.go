@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
 )
@@ -56,6 +57,30 @@ func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord
 	}
 
 	return newPolishWord, nil
+}
+
+func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error) {
+	var deletedPolishWord model.PolishWord
+
+	if id != nil {
+		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE id = $1 RETURNING id, word",
+			*id).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word)
+
+		if err != nil {
+			return nil, err
+		}
+	} else if word != nil {
+		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE word = $1 RETUNING id, word",
+			*word).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word)
+
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("either id or word must be provided")
+	}
+
+	return &deletedPolishWord, nil
 }
 
 func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
