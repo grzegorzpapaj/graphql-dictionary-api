@@ -7,11 +7,11 @@ import (
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
 )
 
-type PolishWordRepository struct {
+type PolishWordRepositoryDB struct {
 	DB *sql.DB
 }
 
-func (pwr *PolishWordRepository) AddPolishWord(ctx context.Context, polishWord model.AddPolishWordInput) (*model.PolishWord, error) {
+func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord model.AddPolishWordInput) (*model.PolishWord, error) {
 
 	newPolishWord := &model.PolishWord{
 		Word:         polishWord.Word,
@@ -58,7 +58,7 @@ func (pwr *PolishWordRepository) AddPolishWord(ctx context.Context, polishWord m
 	return newPolishWord, nil
 }
 
-func (pwr *PolishWordRepository) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
+func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
 	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, word FROM polish_words")
 	if err != nil {
 		return nil, err

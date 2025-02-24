@@ -47,7 +47,7 @@ func main() {
 func startServer(db *sql.DB) {
 	port := os.Getenv("PORT")
 
-	polishWordRepo := repository.PolishWordRepository{DB: db}
+	polishWordRepo := &repository.PolishWordRepositoryDB{DB: db}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{
 		PolishWordRepo: polishWordRepo,
