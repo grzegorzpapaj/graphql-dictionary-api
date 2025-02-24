@@ -64,30 +64,8 @@ func (r *queryResolver) PolishWord(ctx context.Context, id *string, word *string
 
 // PolishWords is the resolver for the polishWords field.
 func (r *queryResolver) PolishWords(ctx context.Context) ([]*model.PolishWord, error) {
-	//panic(fmt.Errorf("not implemented: PolishWords - polishWords"))
 
-	rows, err := r.DB.QueryContext(ctx, "SELECT id, word FROM polish_words")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var polishWords []*model.PolishWord
-	for rows.Next() {
-		var pw model.PolishWord
-		// Scan the current row into your model fields
-		if err := rows.Scan(&pw.ID, &pw.Word); err != nil {
-			return nil, err
-		}
-		polishWords = append(polishWords, &pw)
-	}
-
-	// Check for any errors encountered during row iteration
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return polishWords, nil
+	return r.PolishWordRepo.GetAllPolishWords(ctx)
 }
 
 // Translation is the resolver for the translation field.

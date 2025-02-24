@@ -14,6 +14,7 @@ import (
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/database"
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/generated"
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/resolver"
+	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/repository"
 )
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 
 	fmt.Println("Successfully connected to PostgreSQL")
 
-	word := "test"
+	word := "test4"
 	insertQuery := "INSERT INTO polish_words (word) VALUES ($1) RETURNING id"
 
 	var id int
@@ -46,8 +47,10 @@ func main() {
 func startServer(db *sql.DB) {
 	port := os.Getenv("PORT")
 
+	polishWordRepo := repository.PolishWordRepository{DB: db}
+
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{
-		DB: db,
+		PolishWordRepo: polishWordRepo,
 	}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))

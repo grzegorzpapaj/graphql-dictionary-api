@@ -1,6 +1,10 @@
 package resolver
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/repository"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -8,4 +12,5 @@ import "database/sql"
 
 type Resolver struct {
 	DB *sql.DB
+	PolishWordRepo repository.PolishWordRepository
 }
