@@ -14,7 +14,7 @@ import (
 
 // AddPolishWord is the resolver for the addPolishWord field.
 func (r *mutationResolver) AddPolishWord(ctx context.Context, polishWord model.AddPolishWordInput) (*model.PolishWord, error) {
-	panic(fmt.Errorf("not implemented: AddPolishWord - addPolishWord"))
+	return r.PolishWordRepo.AddPolishWord(ctx, polishWord)
 }
 
 // DeletePolishWord is the resolver for the deletePolishWord field.
