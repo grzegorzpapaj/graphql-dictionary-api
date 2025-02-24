@@ -83,6 +83,128 @@ func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *str
 	return &deletedPolishWord, nil
 }
 
+func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error) {
+	var polishWordToEdit model.PolishWord
+
+	if id != nil {
+		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word FROM polish_words WHERE id = $1",
+			*id).Scan(&polishWordToEdit.ID, &polishWordToEdit.Word)
+
+		if err != nil {
+			return nil, err
+		}
+	} else if word != nil {
+		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word FROM polish_words WHERE word = $1",
+			*word).Scan(&polishWordToEdit.ID, &polishWordToEdit.Word)
+
+		if err != nil {
+			return nil, err
+		} else {
+			return nil, fmt.Errorf("either id or word must be provided")
+		}
+	}
+
+	if word == nil && edits.Word != nil {
+		_, err := pwr.DB.ExecContext(ctx,
+			"UPDATE polish_words SET word = $1 WHERE id = $2",
+			*edits.Word, polishWordToEdit.ID)
+
+		if err != nil {
+			return nil, err
+		}
+		polishWordToEdit.Word = *edits.Word
+	}
+
+	if edits.Translations != nil {
+
+		rows, err := pwr.DB.QueryContext(ctx,
+			"SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id",
+			polishWordToEdit.ID)
+
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var existingTranslations []*model.Translation
+
+		for rows.Next() {
+			var t model.Translation
+			if err := rows.Scan(&t.ID, &t.EnglishWord); err != nil {
+				return nil, err
+			}
+			existingTranslations = append(existingTranslations, &t)
+		}
+
+		for i, editTr := range edits.Translations {
+			if i < len(existingTranslations) {
+				if editTr.EnglishWord != nil {
+					_, err := pwr.DB.ExecContext(ctx,
+						"UPDATE translations SET english_word = $1 WHERE id = $2",
+						*editTr.EnglishWord, existingTranslations[i].ID)
+
+					if err != nil {
+						return nil, err
+					}
+					existingTranslations[i].EnglishWord = *editTr.EnglishWord
+				}
+
+				if editTr.ExampleSentences != nil {
+					esRows, err := pwr.DB.QueryContext(ctx,
+						"SELECT id, sentence_pl, sentence_en FROM example_sentences WHERE translation_id = $1 ORDER BY id",
+						existingTranslations[i].ID)
+
+					if err != nil {
+						return nil, err
+					}
+
+					var existingExamples []*model.ExampleSentence
+					for esRows.Next() {
+						var es model.ExampleSentence
+						if err := esRows.Scan(&es.ID, &es.SentencePl, &es.SentenceEn); err != nil {
+							esRows.Close()
+							return nil, err
+						}
+
+						existingExamples = append(existingExamples, &es)
+					}
+					esRows.Close()
+
+					for j, editES := range editTr.ExampleSentences {
+						if j < len(existingExamples) {
+
+							sentencePl := existingExamples[j].SentencePl
+							sentenceEn := existingExamples[j].SentenceEn
+							if editES.SentencePl != nil {
+								sentencePl = *editES.SentencePl
+							}
+							if editES.SentenceEn != nil {
+								sentenceEn = *editES.SentenceEn
+							}
+
+							_, err := pwr.DB.ExecContext(ctx,
+								"UPDATE example_sentences SET sentence_pl = $1, sentence_en = $2 WHERE id = $3",
+								sentencePl, sentenceEn, existingExamples[j].ID)
+							if err != nil {
+								return nil, err
+							}
+
+							existingExamples[j].SentencePl = sentencePl
+							existingExamples[j].SentenceEn = sentenceEn
+						}
+					}
+
+					existingTranslations[i].ExampleSentences = existingExamples
+				}
+			}
+		}
+		polishWordToEdit.Translations = existingTranslations
+	}
+
+	return &polishWordToEdit, nil
+
+}
+
 func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
 	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, word FROM polish_words")
 	if err != nil {
