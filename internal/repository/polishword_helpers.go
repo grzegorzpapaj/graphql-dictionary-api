@@ -35,47 +35,19 @@ func (pwr *PolishWordRepositoryDB) updateTranslations(
 	editTranslations []*model.EditTranslationInput,
 ) ([]*model.Translation, error) {
 
-	rows, err := pwr.DB.QueryContext(ctx,
-		"SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
-
+	currentTranslationsFromDB, err := pwr.getCurrentTranslationsFromDB(ctx, polishWordID)
 	if err != nil {
 		return nil, err
-	}
-	defer rows.Close()
-
-	var currentTranslationsFromDB []*model.Translation
-	for rows.Next() {
-		var t model.Translation
-		if err := rows.Scan(&t.ID, &t.EnglishWord); err != nil {
-			return nil, err
-		}
-		currentTranslationsFromDB = append(currentTranslationsFromDB, &t)
 	}
 
 	for i, editTr := range editTranslations {
 
 		if i < len(currentTranslationsFromDB) {
 
-			if editTr.EnglishWord != nil {
-				_, err := pwr.DB.ExecContext(ctx,
-					"UPDATE translations SET english_word = $1 WHERE id = $2",
-					*editTr.EnglishWord, currentTranslationsFromDB[i].ID)
+			err := pwr.updateSingleTranslation(ctx, currentTranslationsFromDB[i], editTr)
 
-				if err != nil {
-					return nil, err
-				}
-
-				currentTranslationsFromDB[i].EnglishWord = *editTr.EnglishWord
-			}
-
-			if editTr.ExampleSentences != nil {
-				exampleSentencesForTranslation, err := pwr.updateExampleSentences(ctx, currentTranslationsFromDB[i].ID, editTr.ExampleSentences)
-
-				if err != nil {
-					return nil, err
-				}
-
-				currentTranslationsFromDB[i].ExampleSentences = exampleSentencesForTranslation
+			if err != nil {
+				return nil, err
 			}
 
 		} else {
@@ -222,4 +194,54 @@ func (pwr *PolishWordRepositoryDB) insertExampleSentences(
 	}
 
 	return exampleSentences, nil
+}
+
+func (pwr *PolishWordRepositoryDB) getCurrentTranslationsFromDB(
+	ctx context.Context,
+	polishWordID string,
+) ([]*model.Translation, error) {
+	rows, err := pwr.DB.QueryContext(ctx,
+		"SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var currentTranslationsFromDB []*model.Translation
+	for rows.Next() {
+		var t model.Translation
+		if err := rows.Scan(&t.ID, &t.EnglishWord); err != nil {
+			return nil, err
+		}
+		currentTranslationsFromDB = append(currentTranslationsFromDB, &t)
+	}
+
+	return currentTranslationsFromDB, nil
+}
+
+func (pwr *PolishWordRepositoryDB) updateSingleTranslation(ctx context.Context, translation *model.Translation, editTr *model.EditTranslationInput) error {
+
+	if editTr.EnglishWord != nil {
+		_, err := pwr.DB.ExecContext(ctx, "UPDATE translations SET english_word = $1 WHERE id = $2",
+			*editTr.EnglishWord, translation.ID)
+
+		if err != nil {
+			return err
+		}
+
+		translation.EnglishWord = *editTr.EnglishWord
+	}
+
+	if editTr.ExampleSentences != nil {
+		exampleSentencesForTranslation, err := pwr.updateExampleSentences(ctx, translation.ID, editTr.ExampleSentences)
+
+		if err != nil {
+			return err
+		}
+		translation.ExampleSentences = exampleSentencesForTranslation
+	}
+
+	return nil
+
 }
