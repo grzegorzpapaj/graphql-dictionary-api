@@ -99,9 +99,10 @@ func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *str
 
 		if err != nil {
 			return nil, err
-		} else {
-			return nil, fmt.Errorf("either id or word must be provided")
 		}
+
+	} else {
+		return nil, fmt.Errorf("either id or word must be provided")
 	}
 
 	if word == nil && edits.Word != nil {
@@ -191,6 +192,35 @@ func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *str
 
 							existingExamples[j].SentencePl = sentencePl
 							existingExamples[j].SentenceEn = sentenceEn
+						} else {
+
+							var newExampleSentenceID string
+							sentencePl := ""
+							sentenceEn := ""
+
+							if editES.SentencePl != nil {
+								sentencePl = *editES.SentencePl
+							}
+
+							if editES.SentenceEn != nil {
+								sentenceEn = *editES.SentenceEn
+							}
+
+							err := pwr.DB.QueryRowContext(ctx, "INSERT INTO example_sentences(sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
+								sentencePl, sentenceEn, existingTranslations[i].ID).Scan(&newExampleSentenceID)
+
+							if err != nil {
+								return nil, err
+							}
+
+							newExample := &model.ExampleSentence{
+								ID:         newExampleSentenceID,
+								SentencePl: sentencePl,
+								SentenceEn: sentenceEn,
+							}
+
+							existingExamples = append(existingExamples, newExample)
+
 						}
 					}
 
@@ -198,6 +228,63 @@ func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *str
 				}
 			}
 		}
+
+		if len(edits.Translations) > len(existingTranslations) {
+
+			for i := len(existingTranslations); i < len(edits.Translations); i++ {
+
+				editTr := edits.Translations[i]
+				if editTr.EnglishWord != nil {
+					var newTranslationID string
+					err := pwr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
+						*editTr.EnglishWord, polishWordToEdit.ID).Scan(&newTranslationID)
+
+					if err != nil {
+						return nil, err
+					}
+
+					newTranslation := &model.Translation{
+						ID:               newTranslationID,
+						EnglishWord:      *editTr.EnglishWord,
+						ExampleSentences: []*model.ExampleSentence{},
+					}
+
+					if editTr.ExampleSentences != nil {
+
+						for _, editEs := range editTr.ExampleSentences {
+							var newExampleSentenceID string
+							sentencePl := ""
+							sentenceEn := ""
+
+							if editEs.SentencePl != nil {
+								sentencePl = *editEs.SentencePl
+							}
+
+							if editEs.SentenceEn != nil {
+								sentenceEn = *editEs.SentenceEn
+							}
+
+							err := pwr.DB.QueryRowContext(ctx, "INSERT INTO example_sentences(sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
+								sentencePl, sentenceEn, newTranslationID).Scan(&newExampleSentenceID)
+
+							if err != nil {
+								return nil, err
+							}
+
+							newExample := &model.ExampleSentence{
+								ID:         newExampleSentenceID,
+								SentencePl: sentencePl,
+								SentenceEn: sentenceEn,
+							}
+
+							newTranslation.ExampleSentences = append(newTranslation.ExampleSentences, newExample)
+						}
+					}
+					existingTranslations = append(existingTranslations, newTranslation)
+				}
+			}
+		}
+
 		polishWordToEdit.Translations = existingTranslations
 	}
 

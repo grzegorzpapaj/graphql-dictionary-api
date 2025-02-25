@@ -30,6 +30,10 @@ func (m *MockPolishWordRepository) DeletePolishWord(ctx context.Context, id *str
 	return nil, args.Error(1)
 }
 
+func UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error) {
+	return nil, nil
+}
+
 func (m *MockPolishWordRepository) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
 	args := m.Called(ctx)
 
