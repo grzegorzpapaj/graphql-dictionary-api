@@ -30,17 +30,6 @@ func main() {
 
 	fmt.Println("Successfully connected to PostgreSQL")
 
-	word := "test12"
-	insertQuery := "INSERT INTO polish_words (word) VALUES ($1) RETURNING id"
-
-	var id int
-	err = db.QueryRow(insertQuery, word).Scan(&id)
-	if err != nil {
-		log.Fatalf("Error inserting into database: %v", err)
-	}
-
-	fmt.Printf("Inserted word '%s' with ID %d\n", word, id)
-
 	startServer(db)
 }
 
