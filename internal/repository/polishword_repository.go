@@ -84,25 +84,10 @@ func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *str
 }
 
 func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error) {
-	var polishWordToEdit model.PolishWord
 
-	if id != nil {
-		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word FROM polish_words WHERE id = $1",
-			*id).Scan(&polishWordToEdit.ID, &polishWordToEdit.Word)
-
-		if err != nil {
-			return nil, err
-		}
-	} else if word != nil {
-		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word FROM polish_words WHERE word = $1",
-			*word).Scan(&polishWordToEdit.ID, &polishWordToEdit.Word)
-
-		if err != nil {
-			return nil, err
-		}
-
-	} else {
-		return nil, fmt.Errorf("either id or word must be provided")
+	polishWordToEdit, err := pwr.fetchPolishWords(ctx, id, word)
+	if err != nil {
+		return nil, err
 	}
 
 	if word == nil && edits.Word != nil {
@@ -288,7 +273,7 @@ func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *str
 		polishWordToEdit.Translations = existingTranslations
 	}
 
-	return &polishWordToEdit, nil
+	return polishWordToEdit, nil
 
 }
 
