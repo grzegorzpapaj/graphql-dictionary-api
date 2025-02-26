@@ -127,6 +127,14 @@ func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*mo
 		if err := rows.Scan(&pw.ID, &pw.Word); err != nil {
 			return nil, err
 		}
+
+		translations, err := pwr.getTranslationsWithExampleSentences(ctx, pw.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		pw.Translations = translations
+
 		polishWords = append(polishWords, &pw)
 	}
 

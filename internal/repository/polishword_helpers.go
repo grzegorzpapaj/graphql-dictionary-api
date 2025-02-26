@@ -300,3 +300,32 @@ func (pwr *PolishWordRepositoryDB) insertExampleSentence(
 		SentenceEn: sentenceEn,
 	}, nil
 }
+
+func (pwr *PolishWordRepositoryDB) getTranslationsWithExampleSentences(ctx context.Context, polishWordID string) ([]*model.Translation, error) {
+	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var translations []*model.Translation
+	for rows.Next() {
+
+		var tr model.Translation
+		if err := rows.Scan(&tr.ID, &tr.EnglishWord); err != nil {
+			return nil, err
+		}
+
+		examples, err := pwr.getCurrentExampleSentencesFromDB(ctx, tr.ID)
+		if err != nil {
+			return nil, err
+		}
+		tr.ExampleSentences = examples
+
+		translations = append(translations, &tr)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return translations, nil
+}
