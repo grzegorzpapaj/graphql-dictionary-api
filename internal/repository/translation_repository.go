@@ -13,16 +13,35 @@ type TranslationRepositoryDB struct {
 
 func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error) {
 
+	targetPolishWordID, err := tr.getTargetPolishWordID(ctx, polishWordID, polishWord)
+
+	if err != nil {
+		return nil, err
+	}
+
 	newTranslation := &model.Translation{
 		EnglishWord:      translation.EnglishWord,
 		ExampleSentences: []*model.ExampleSentence{},
 	}
 
-	err := tr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
-		newTranslation.EnglishWord, polishWordID).Scan(&newTranslation.ID)
+	err = tr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
+		newTranslation.EnglishWord, *targetPolishWordID).Scan(&newTranslation.ID)
 
 	if err != nil {
 		return nil, err
+	}
+
+	if polishWord != nil {
+		newTranslation.PolishWord = &model.PolishWord{
+			ID:   *targetPolishWordID,
+			Word: *polishWord,
+		}
+	} else {
+		newTranslation.PolishWord, err = tr.prepareWordWithId(ctx, targetPolishWordID)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for _, es := range translation.ExampleSentences {
