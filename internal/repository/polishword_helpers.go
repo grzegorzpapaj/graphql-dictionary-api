@@ -52,34 +52,12 @@ func (pwr *PolishWordRepositoryDB) updateTranslations(
 
 		} else {
 
-			if editTr.EnglishWord != nil {
-				var newTranslationID string
-				err := pwr.DB.QueryRowContext(ctx,
-					"INSERT INTO translations (english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
-					*editTr.EnglishWord, polishWordID).Scan(&newTranslationID)
-				if err != nil {
-					return nil, err
-				}
-
-				newTranslation := &model.Translation{
-					ID:               newTranslationID,
-					EnglishWord:      *editTr.EnglishWord,
-					ExampleSentences: []*model.ExampleSentence{},
-				}
-
-				if editTr.ExampleSentences != nil {
-					exampleSentencesForTranslation, err := pwr.insertExampleSentences(ctx, newTranslationID, editTr.ExampleSentences)
-
-					if err != nil {
-						return nil, err
-					}
-
-					newTranslation.ExampleSentences = exampleSentencesForTranslation
-				}
-
-				currentTranslationsFromDB = append(currentTranslationsFromDB, newTranslation)
+			newTranslation, err := pwr.insertTranslation(ctx, polishWordID, editTr)
+			if err != nil {
+				return nil, err
 			}
 
+			currentTranslationsFromDB = append(currentTranslationsFromDB, newTranslation)
 		}
 	}
 
@@ -244,4 +222,41 @@ func (pwr *PolishWordRepositoryDB) updateSingleTranslation(ctx context.Context, 
 
 	return nil
 
+}
+
+func (pwr *PolishWordRepositoryDB) insertTranslation(
+	ctx context.Context,
+	polishWordID string,
+	editTr *model.EditTranslationInput) (*model.Translation, error) {
+
+	if editTr.EnglishWord == nil {
+		return nil, fmt.Errorf("EnglishWord is required for inserting a new translation")
+	}
+
+	var newTranslationID string
+	err := pwr.DB.QueryRowContext(ctx,
+		"INSERT INTO translations (english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
+		*editTr.EnglishWord, polishWordID).Scan(&newTranslationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	newTranslation := &model.Translation{
+		ID:               newTranslationID,
+		EnglishWord:      *editTr.EnglishWord,
+		ExampleSentences: []*model.ExampleSentence{},
+	}
+
+	if editTr.ExampleSentences != nil {
+		exampleSentences, err := pwr.insertExampleSentences(ctx, newTranslationID, editTr.ExampleSentences)
+
+		if err != nil {
+			return nil, err
+		}
+
+		newTranslation.ExampleSentences = exampleSentences
+	}
+
+	return newTranslation, nil
 }
