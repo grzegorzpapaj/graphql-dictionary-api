@@ -30,7 +30,12 @@ func (m *MockPolishWordRepository) DeletePolishWord(ctx context.Context, id *str
 	return nil, args.Error(1)
 }
 
-func UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error) {
+func (m *MockPolishWordRepository) UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error) {
+	args := m.Called(ctx, id, word, edits)
+
+	if result, ok := args.Get(0).(*model.PolishWord); ok {
+		return result, args.Error(1)
+	}
 	return nil, nil
 }
 

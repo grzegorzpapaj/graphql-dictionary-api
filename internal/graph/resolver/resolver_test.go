@@ -12,15 +12,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAddPolishWord(t *testing.T) {
-
+func setupTestMutationResolver() (*mocks.MockPolishWordRepository, *mutationResolver) {
 	mockRepo := new(mocks.MockPolishWordRepository)
-
-	mutation := &mutationResolver{
+	resolver := &mutationResolver{
 		Resolver: &Resolver{
 			PolishWordRepo: mockRepo,
 		},
 	}
+	return mockRepo, resolver
+}
+
+func TestAddPolishWord(t *testing.T) {
+
+	mockRepo, mutation := setupTestMutationResolver()
 
 	input := model.AddPolishWordInput{
 		Word: "test_pierwszy",
@@ -66,13 +70,8 @@ func TestAddPolishWord(t *testing.T) {
 }
 
 func TestDeletePolishWord_ByID_Success(t *testing.T) {
-	mockRepo := new(mocks.MockPolishWordRepository)
 
-	mutation := &mutationResolver{
-		Resolver: &Resolver{
-			PolishWordRepo: mockRepo,
-		},
-	}
+	mockRepo, mutation := setupTestMutationResolver()
 
 	id := "1"
 
@@ -91,13 +90,8 @@ func TestDeletePolishWord_ByID_Success(t *testing.T) {
 }
 
 func TestDeletePolishWord_ByWord_Success(t *testing.T) {
-	mockRepo := new(mocks.MockPolishWordRepository)
 
-	mutation := &mutationResolver{
-		Resolver: &Resolver{
-			PolishWordRepo: mockRepo,
-		},
-	}
+	mockRepo, mutation := setupTestMutationResolver()
 
 	word := "słowo"
 
@@ -116,13 +110,8 @@ func TestDeletePolishWord_ByWord_Success(t *testing.T) {
 }
 
 func TestDeletePolishWord_MissingParameters(t *testing.T) {
-	mockRepo := new(mocks.MockPolishWordRepository)
 
-	mutation := &mutationResolver{
-		Resolver: &Resolver{
-			PolishWordRepo: mockRepo,
-		},
-	}
+	mockRepo, mutation := setupTestMutationResolver()
 
 	mockRepo.On("DeletePolishWord", mock.Anything, (*string)(nil), (*string)(nil)).
 		Return(nil, errors.New("either id or word must be provided")).Once()
@@ -132,4 +121,69 @@ func TestDeletePolishWord_MissingParameters(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, result)
 	mockRepo.AssertExpectations(t)
+}
+
+func TestUpdatePolishWord(t *testing.T) {
+
+	mockRepo, mutation := setupTestMutationResolver()
+
+	id := "1"
+	newWord := "newWord"
+	newEnglishWord := "newEnglishWord"
+	newSentencePL := "New sentence PL"
+	newSentenceEN := "New sentence EN"
+	newSentencePL2 := "New sentence PL2"
+	newSentenceEN2 := "New sentence EN2"
+
+	editTranslation := &model.EditTranslationInput{
+		EnglishWord: &newEnglishWord,
+		ExampleSentences: []*model.EditExampleSentenceInput{
+			{
+				SentencePl: &newSentencePL,
+				SentenceEn: &newSentenceEN,
+			},
+			{
+				SentencePl: &newSentencePL2,
+				SentenceEn: &newSentenceEN2,
+			},
+		},
+	}
+
+	editPolishWord := &model.EditPolishWordInput{
+		Word:         &newWord,
+		Translations: []*model.EditTranslationInput{editTranslation},
+	}
+
+	expected := &model.PolishWord{
+		ID:   id,
+		Word: newWord,
+		Translations: []*model.Translation{
+			{
+				ID:          "1",
+				EnglishWord: newEnglishWord,
+				ExampleSentences: []*model.ExampleSentence{
+					{
+						ID:         "1",
+						SentencePl: newSentencePL,
+						SentenceEn: newSentenceEN,
+					},
+					{
+						ID:         "2",
+						SentencePl: newSentencePL2,
+						SentenceEn: newSentencePL2,
+					},
+				},
+			},
+		},
+	}
+
+	mockRepo.On("UpdatePolishWord", mock.Anything, &id, (*string)(nil), editPolishWord).Return(expected, nil).Once()
+
+	result, err := mutation.UpdatePolishWord(context.Background(), &id, nil, editPolishWord)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+
 }
