@@ -9,7 +9,8 @@ import (
 )
 
 type PolishWordRepositoryDB struct {
-	DB *sql.DB
+	DB              *sql.DB
+	TranslationRepo *TranslationRepositoryDB
 }
 
 func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord model.AddPolishWordInput) (*model.PolishWord, error) {
@@ -25,35 +26,15 @@ func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord
 	}
 
 	for _, t := range polishWord.Translations {
-		newTranslation := &model.Translation{
-			EnglishWord:      t.EnglishWord,
-			ExampleSentences: []*model.ExampleSentence{},
-		}
 
-		err = pwr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
-			newTranslation.EnglishWord, newPolishWord.ID).Scan(&newTranslation.ID)
+		newTranslation, err := pwr.TranslationRepo.AddTranslation(ctx, &newPolishWord.ID, &polishWord.Word, t)
 
 		if err != nil {
 			return nil, err
 		}
 
-		for _, es := range t.ExampleSentences {
-			newExampleSentence := &model.ExampleSentence{
-				SentencePl: es.SentencePl,
-				SentenceEn: es.SentenceEn,
-			}
-
-			err = pwr.DB.QueryRowContext(ctx, "INSERT INTO example_sentences(sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
-				newExampleSentence.SentencePl, newExampleSentence.SentenceEn, newTranslation.ID).Scan(&newExampleSentence.ID)
-
-			if err != nil {
-				return nil, err
-			}
-
-			newTranslation.ExampleSentences = append(newTranslation.ExampleSentences, newExampleSentence)
-		}
-
 		newPolishWord.Translations = append(newPolishWord.Translations, newTranslation)
+
 	}
 
 	return newPolishWord, nil

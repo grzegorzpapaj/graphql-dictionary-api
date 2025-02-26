@@ -11,6 +11,7 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	DB             *sql.DB
-	PolishWordRepo repository.PolishWordRepositoryInterface
+	DB              *sql.DB
+	PolishWordRepo  repository.PolishWordRepositoryInterface
+	TranslationRepo repository.TranslationRepositoryInterface
 }

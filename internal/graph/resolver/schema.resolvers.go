@@ -29,7 +29,7 @@ func (r *mutationResolver) UpdatePolishWord(ctx context.Context, id *string, wor
 
 // AddTranslation is the resolver for the addTranslation field.
 func (r *mutationResolver) AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error) {
-	panic(fmt.Errorf("not implemented: AddTranslation - addTranslation"))
+	return r.TranslationRepo.AddTranslation(ctx, polishWordID, polishWord, translation)
 }
 
 // DeleteTranslation is the resolver for the deleteTranslation field.
