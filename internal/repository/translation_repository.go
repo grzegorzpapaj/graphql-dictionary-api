@@ -61,3 +61,25 @@ func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWor
 	}
 	return newTranslation, nil
 }
+
+func (tr *TranslationRepositoryDB) DeleteTranslation(ctx context.Context, id string) (*model.Translation, error) {
+	var deletedTranslation model.Translation
+	deletedTranslation.PolishWord = &model.PolishWord{}
+
+	err := tr.DB.QueryRowContext(ctx, "DELETE FROM translations WHERE id = $1 RETURNING id, english_word, polish_word_id", id).
+		Scan(&deletedTranslation.ID, &deletedTranslation.EnglishWord, &deletedTranslation.PolishWord.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var fetchedPolishWord string
+	err = tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1", deletedTranslation.PolishWord.ID).Scan(&fetchedPolishWord)
+
+	if err != nil {
+		return nil, err
+	}
+	deletedTranslation.PolishWord.Word = fetchedPolishWord
+
+	return &deletedTranslation, nil
+}
