@@ -32,7 +32,7 @@ type Mutation {
     updatePolishWord(id: ID, word: String, edits: EditPolishWordInput): PolishWord
 
     addTranslation(polishWordId: ID, polishWord: String, translation: AddTranslationInput): Translation
-    deleteTranslation(id: ID, translation: String): Translation
+    deleteTranslation(id: ID!): Translation
     updateTranslation(id: ID, translation: String, edits: EditTranslationInput): Translation
 
     addExampleSentence(translationId: ID, translation: String, exampleSentence: AddExampleSentenceInput): ExampleSentence
