@@ -20,3 +20,13 @@ func (m *MockTranslationRepository) AddTranslation(ctx context.Context, polishWo
 	}
 	return nil, args.Error(1)
 }
+
+func (m *MockTranslationRepository) DeleteTranslation(ctx context.Context, id string) (*model.Translation, error) {
+
+	args := m.Called(ctx, id)
+
+	if result, ok := args.Get(0).(*model.Translation); ok {
+		return result, args.Error(1)
+	}
+	return nil, args.Error(1)
+}
