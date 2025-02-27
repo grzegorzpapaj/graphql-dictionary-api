@@ -38,7 +38,7 @@ func (r *mutationResolver) DeleteTranslation(ctx context.Context, id string) (*m
 }
 
 // UpdateTranslation is the resolver for the updateTranslation field.
-func (r *mutationResolver) UpdateTranslation(ctx context.Context, id *string, translation *string, edits *model.EditTranslationInput) (*model.Translation, error) {
+func (r *mutationResolver) UpdateTranslation(ctx context.Context, id string, edits model.EditTranslationInput) (*model.Translation, error) {
 	panic(fmt.Errorf("not implemented: UpdateTranslation - updateTranslation"))
 }
 

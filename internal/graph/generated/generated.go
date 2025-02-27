@@ -62,7 +62,7 @@ type ComplexityRoot struct {
 		DeleteTranslation     func(childComplexity int, id string) int
 		UpdateExampleSentence func(childComplexity int, id *string, edits *model.EditExampleSentenceInput) int
 		UpdatePolishWord      func(childComplexity int, id *string, word *string, edits *model.EditPolishWordInput) int
-		UpdateTranslation     func(childComplexity int, id *string, translation *string, edits *model.EditTranslationInput) int
+		UpdateTranslation     func(childComplexity int, id string, edits model.EditTranslationInput) int
 	}
 
 	PolishWord struct {
@@ -93,7 +93,7 @@ type MutationResolver interface {
 	UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error)
 	AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error)
 	DeleteTranslation(ctx context.Context, id string) (*model.Translation, error)
-	UpdateTranslation(ctx context.Context, id *string, translation *string, edits *model.EditTranslationInput) (*model.Translation, error)
+	UpdateTranslation(ctx context.Context, id string, edits model.EditTranslationInput) (*model.Translation, error)
 	AddExampleSentence(ctx context.Context, translationID *string, translation *string, exampleSentence *model.AddExampleSentenceInput) (*model.ExampleSentence, error)
 	DeleteExampleSentence(ctx context.Context, id *string) (*model.ExampleSentence, error)
 	UpdateExampleSentence(ctx context.Context, id *string, edits *model.EditExampleSentenceInput) (*model.ExampleSentence, error)
@@ -259,7 +259,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateTranslation(childComplexity, args["id"].(*string), args["translation"].(*string), args["edits"].(*model.EditTranslationInput)), true
+		return e.complexity.Mutation.UpdateTranslation(childComplexity, args["id"].(string), args["edits"].(model.EditTranslationInput)), true
 
 	case "PolishWord.id":
 		if e.complexity.PolishWord.ID == nil {
@@ -511,7 +511,7 @@ type Mutation {
 
     addTranslation(polishWordId: ID, polishWord: String, translation: AddTranslationInput): Translation
     deleteTranslation(id: ID!): Translation
-    updateTranslation(id: ID, translation: String, edits: EditTranslationInput): Translation
+    updateTranslation(id: ID!, edits: EditTranslationInput!): Translation
 
     addExampleSentence(translationId: ID, translation: String, exampleSentence: AddExampleSentenceInput): ExampleSentence
     deleteExampleSentence(id: ID): ExampleSentence
@@ -970,69 +970,46 @@ func (ec *executionContext) field_Mutation_updateTranslation_args(ctx context.Co
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := ec.field_Mutation_updateTranslation_argsTranslation(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_updateTranslation_argsEdits(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["translation"] = arg1
-	arg2, err := ec.field_Mutation_updateTranslation_argsEdits(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["edits"] = arg2
+	args["edits"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_updateTranslation_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*string, error) {
+) (string, error) {
 	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal *string
+		var zeroVal string
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalOID2ᚖstring(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_updateTranslation_argsTranslation(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["translation"]; !ok {
-		var zeroVal *string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("translation"))
-	if tmp, ok := rawArgs["translation"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
+	var zeroVal string
 	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_updateTranslation_argsEdits(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*model.EditTranslationInput, error) {
+) (model.EditTranslationInput, error) {
 	if _, ok := rawArgs["edits"]; !ok {
-		var zeroVal *model.EditTranslationInput
+		var zeroVal model.EditTranslationInput
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("edits"))
 	if tmp, ok := rawArgs["edits"]; ok {
-		return ec.unmarshalOEditTranslationInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditTranslationInput(ctx, tmp)
+		return ec.unmarshalNEditTranslationInput2githubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditTranslationInput(ctx, tmp)
 	}
 
-	var zeroVal *model.EditTranslationInput
+	var zeroVal model.EditTranslationInput
 	return zeroVal, nil
 }
 
@@ -1823,7 +1800,7 @@ func (ec *executionContext) _Mutation_updateTranslation(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTranslation(rctx, fc.Args["id"].(*string), fc.Args["translation"].(*string), fc.Args["edits"].(*model.EditTranslationInput))
+		return ec.resolvers.Mutation().UpdateTranslation(rctx, fc.Args["id"].(string), fc.Args["edits"].(model.EditTranslationInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5766,6 +5743,11 @@ func (ec *executionContext) unmarshalNEditExampleSentenceInput2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNEditTranslationInput2githubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditTranslationInput(ctx context.Context, v any) (model.EditTranslationInput, error) {
+	res, err := ec.unmarshalInputEditTranslationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNEditTranslationInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditTranslationInput(ctx context.Context, v any) (*model.EditTranslationInput, error) {
 	res, err := ec.unmarshalInputEditTranslationInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -6268,14 +6250,6 @@ func (ec *executionContext) unmarshalOEditTranslationInput2ᚕᚖgithubᚗcomᚋ
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalOEditTranslationInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditTranslationInput(ctx context.Context, v any) (*model.EditTranslationInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputEditTranslationInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOExampleSentence2ᚕᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐExampleSentence(ctx context.Context, sel ast.SelectionSet, v []*model.ExampleSentence) graphql.Marshaler {
