@@ -13,13 +13,25 @@ import (
 )
 
 func setupTestMutationResolver() (*mocks.MockPolishWordRepository, *mutationResolver) {
-	mockRepo := new(mocks.MockPolishWordRepository)
+
+	mockPolishWordRepo := new(mocks.MockPolishWordRepository)
 	resolver := &mutationResolver{
 		Resolver: &Resolver{
-			PolishWordRepo: mockRepo,
+			PolishWordRepo: mockPolishWordRepo,
 		},
 	}
-	return mockRepo, resolver
+	return mockPolishWordRepo, resolver
+}
+
+func setupTestTranslationMutationResolver() (*mocks.MockTranslationRepository, *mutationResolver) {
+	mockTranslationRepo := new(mocks.MockTranslationRepository)
+	resolver := &mutationResolver{
+		Resolver: &Resolver{
+			TranslationRepo: mockTranslationRepo,
+		},
+	}
+
+	return mockTranslationRepo, resolver
 }
 
 func TestAddPolishWord(t *testing.T) {
@@ -184,6 +196,48 @@ func TestUpdatePolishWord(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
 
+	mockRepo.AssertExpectations(t)
+
+}
+
+// Translation tests
+
+func TestAddTranslation(t *testing.T) {
+	mockRepo, mutation := setupTestTranslationMutationResolver()
+
+	input := model.AddTranslationInput{
+		EnglishWord: "test_translation",
+		ExampleSentences: []*model.AddExampleSentenceInput{
+			{
+				SentencePl: "Test tłumaczenia",
+				SentenceEn: "Test translation",
+			},
+		},
+	}
+
+	expected := &model.Translation{
+		ID:          "1",
+		EnglishWord: "test_first",
+		PolishWord: &model.PolishWord{
+			ID:   "1",
+			Word: "test_translation",
+		},
+		ExampleSentences: []*model.ExampleSentence{
+			{
+				ID:         "1",
+				SentencePl: "Test tłumaczenia",
+				SentenceEn: "Test translation",
+			},
+		},
+	}
+
+	mockRepo.On("AddTranslation", mock.Anything, mock.Anything, mock.Anything, &input).Return(expected, nil).Once()
+
+	polishWordId := "1"
+
+	result, err := mutation.TranslationRepo.AddTranslation(context.Background(), &polishWordId, nil, &input)
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
 	mockRepo.AssertExpectations(t)
 
 }
