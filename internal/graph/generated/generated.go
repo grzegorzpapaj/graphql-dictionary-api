@@ -59,7 +59,7 @@ type ComplexityRoot struct {
 		AddTranslation        func(childComplexity int, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) int
 		DeleteExampleSentence func(childComplexity int, id *string) int
 		DeletePolishWord      func(childComplexity int, id *string, word *string) int
-		DeleteTranslation     func(childComplexity int, id *string, translation *string) int
+		DeleteTranslation     func(childComplexity int, id string) int
 		UpdateExampleSentence func(childComplexity int, id *string, edits *model.EditExampleSentenceInput) int
 		UpdatePolishWord      func(childComplexity int, id *string, word *string, edits *model.EditPolishWordInput) int
 		UpdateTranslation     func(childComplexity int, id *string, translation *string, edits *model.EditTranslationInput) int
@@ -92,7 +92,7 @@ type MutationResolver interface {
 	DeletePolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error)
 	UpdatePolishWord(ctx context.Context, id *string, word *string, edits *model.EditPolishWordInput) (*model.PolishWord, error)
 	AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error)
-	DeleteTranslation(ctx context.Context, id *string, translation *string) (*model.Translation, error)
+	DeleteTranslation(ctx context.Context, id string) (*model.Translation, error)
 	UpdateTranslation(ctx context.Context, id *string, translation *string, edits *model.EditTranslationInput) (*model.Translation, error)
 	AddExampleSentence(ctx context.Context, translationID *string, translation *string, exampleSentence *model.AddExampleSentenceInput) (*model.ExampleSentence, error)
 	DeleteExampleSentence(ctx context.Context, id *string) (*model.ExampleSentence, error)
@@ -223,7 +223,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteTranslation(childComplexity, args["id"].(*string), args["translation"].(*string)), true
+		return e.complexity.Mutation.DeleteTranslation(childComplexity, args["id"].(string)), true
 
 	case "Mutation.updateExampleSentence":
 		if e.complexity.Mutation.UpdateExampleSentence == nil {
@@ -510,7 +510,7 @@ type Mutation {
     updatePolishWord(id: ID, word: String, edits: EditPolishWordInput): PolishWord
 
     addTranslation(polishWordId: ID, polishWord: String, translation: AddTranslationInput): Translation
-    deleteTranslation(id: ID, translation: String): Translation
+    deleteTranslation(id: ID!): Translation
     updateTranslation(id: ID, translation: String, edits: EditTranslationInput): Translation
 
     addExampleSentence(translationId: ID, translation: String, exampleSentence: AddExampleSentenceInput): ExampleSentence
@@ -817,46 +817,23 @@ func (ec *executionContext) field_Mutation_deleteTranslation_args(ctx context.Co
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := ec.field_Mutation_deleteTranslation_argsTranslation(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["translation"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_deleteTranslation_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*string, error) {
+) (string, error) {
 	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal *string
+		var zeroVal string
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalOID2ᚖstring(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteTranslation_argsTranslation(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["translation"]; !ok {
-		var zeroVal *string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("translation"))
-	if tmp, ok := rawArgs["translation"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -1784,7 +1761,7 @@ func (ec *executionContext) _Mutation_deleteTranslation(ctx context.Context, fie
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteTranslation(rctx, fc.Args["id"].(*string), fc.Args["translation"].(*string))
+		return ec.resolvers.Mutation().DeleteTranslation(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
