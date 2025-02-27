@@ -44,7 +44,7 @@ func (pwr *PolishWordRepositoryDB) updateTranslations(
 
 		if i < len(currentTranslationsFromDB) {
 
-			err := pwr.updateSingleTranslation(ctx, currentTranslationsFromDB[i], editTr)
+			err := UpdateSingleTranslation(ctx, pwr.DB, currentTranslationsFromDB[i], editTr)
 
 			if err != nil {
 				return nil, err
@@ -63,40 +63,6 @@ func (pwr *PolishWordRepositoryDB) updateTranslations(
 
 	return currentTranslationsFromDB, nil
 
-}
-
-func (pwr *PolishWordRepositoryDB) updateExampleSentences(
-	ctx context.Context,
-	translationID string,
-	editExamples []*model.EditExampleSentenceInput,
-) ([]*model.ExampleSentence, error) {
-
-	currentExampleSentencesFromDB, err := pwr.getCurrentExampleSentencesFromDB(ctx, translationID)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, editEs := range editExamples {
-
-		if i < len(currentExampleSentencesFromDB) {
-
-			err := pwr.updateSingleExampleSentence(ctx, currentExampleSentencesFromDB[i], editEs)
-			if err != nil {
-				return nil, err
-			}
-
-		} else {
-
-			newExampleSentence, err := pwr.insertExampleSentence(ctx, translationID, editEs)
-			if err != nil {
-				return nil, err
-			}
-
-			currentExampleSentencesFromDB = append(currentExampleSentencesFromDB, newExampleSentence)
-		}
-	}
-
-	return currentExampleSentencesFromDB, nil
 }
 
 func (pwr *PolishWordRepositoryDB) insertExampleSentences(
@@ -150,32 +116,6 @@ func (pwr *PolishWordRepositoryDB) getCurrentTranslationsFromDB(
 	return currentTranslationsFromDB, nil
 }
 
-func (pwr *PolishWordRepositoryDB) updateSingleTranslation(ctx context.Context, translation *model.Translation, editTr *model.EditTranslationInput) error {
-
-	if editTr.EnglishWord != nil {
-		_, err := pwr.DB.ExecContext(ctx, "UPDATE translations SET english_word = $1 WHERE id = $2",
-			*editTr.EnglishWord, translation.ID)
-
-		if err != nil {
-			return err
-		}
-
-		translation.EnglishWord = *editTr.EnglishWord
-	}
-
-	if editTr.ExampleSentences != nil {
-		exampleSentencesForTranslation, err := pwr.updateExampleSentences(ctx, translation.ID, editTr.ExampleSentences)
-
-		if err != nil {
-			return err
-		}
-		translation.ExampleSentences = exampleSentencesForTranslation
-	}
-
-	return nil
-
-}
-
 func (pwr *PolishWordRepositoryDB) insertTranslation(
 	ctx context.Context,
 	polishWordID string,
@@ -213,94 +153,6 @@ func (pwr *PolishWordRepositoryDB) insertTranslation(
 	return newTranslation, nil
 }
 
-func (pwr *PolishWordRepositoryDB) getCurrentExampleSentencesFromDB(
-	ctx context.Context,
-	translationID string,
-) ([]*model.ExampleSentence, error) {
-	rows, err := pwr.DB.QueryContext(ctx,
-		"SELECT id, sentence_pl, sentence_en FROM example_sentences WHERE translation_id = $1 ORDER BY id", translationID)
-
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var currentExampleSentencesFromDB []*model.ExampleSentence
-	for rows.Next() {
-		var es model.ExampleSentence
-		if err := rows.Scan(&es.ID, &es.SentencePl, &es.SentenceEn); err != nil {
-			return nil, err
-		}
-
-		currentExampleSentencesFromDB = append(currentExampleSentencesFromDB, &es)
-	}
-
-	return currentExampleSentencesFromDB, nil
-}
-
-func (pwr *PolishWordRepositoryDB) updateSingleExampleSentence(
-	ctx context.Context,
-	exampleSentence *model.ExampleSentence,
-	editEs *model.EditExampleSentenceInput,
-) error {
-	sentencePl := exampleSentence.SentencePl
-	sentenceEn := exampleSentence.SentenceEn
-
-	if editEs.SentencePl != nil {
-		sentencePl = *editEs.SentencePl
-	}
-
-	if editEs.SentenceEn != nil {
-		sentenceEn = *editEs.SentenceEn
-	}
-
-	_, err := pwr.DB.ExecContext(ctx,
-		"UPDATE example_sentences SET sentence_pl = $1, sentence_en = $2 WHERE id = $3",
-		sentencePl, sentenceEn, exampleSentence.ID)
-
-	if err != nil {
-		return err
-	}
-
-	exampleSentence.SentencePl = sentencePl
-	exampleSentence.SentenceEn = sentenceEn
-
-	return nil
-
-}
-
-func (pwr *PolishWordRepositoryDB) insertExampleSentence(
-	ctx context.Context,
-	translationID string,
-	editEs *model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
-
-	var newExampleSentenceID string
-	sentencePl := ""
-	sentenceEn := ""
-
-	if editEs.SentencePl != nil {
-		sentencePl = *editEs.SentencePl
-	}
-
-	if editEs.SentenceEn != nil {
-		sentenceEn = *editEs.SentenceEn
-	}
-
-	err := pwr.DB.QueryRowContext(ctx,
-		"INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
-		sentencePl, sentenceEn, translationID).Scan(&newExampleSentenceID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.ExampleSentence{
-		ID:         newExampleSentenceID,
-		SentencePl: sentencePl,
-		SentenceEn: sentenceEn,
-	}, nil
-}
-
 func (pwr *PolishWordRepositoryDB) getTranslationsWithExampleSentences(ctx context.Context, polishWordID string) ([]*model.Translation, error) {
 	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
 	if err != nil {
@@ -316,7 +168,7 @@ func (pwr *PolishWordRepositoryDB) getTranslationsWithExampleSentences(ctx conte
 			return nil, err
 		}
 
-		examples, err := pwr.getCurrentExampleSentencesFromDB(ctx, tr.ID)
+		examples, err := GetCurrentExampleSentencesFromDB(ctx, pwr.DB, tr.ID)
 		if err != nil {
 			return nil, err
 		}
