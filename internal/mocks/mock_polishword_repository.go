@@ -36,7 +36,7 @@ func (m *MockPolishWordRepository) UpdatePolishWord(ctx context.Context, id *str
 	if result, ok := args.Get(0).(*model.PolishWord); ok {
 		return result, args.Error(1)
 	}
-	return nil, nil
+	return nil, args.Error(1)
 }
 
 func (m *MockPolishWordRepository) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
