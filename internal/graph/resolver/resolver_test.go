@@ -34,6 +34,17 @@ func setupTestTranslationMutationResolver() (*mocks.MockTranslationRepository, *
 	return mockTranslationRepo, resolver
 }
 
+func setupTestExampleSentenceMutationResolver() (*mocks.MockExampleSentenceRepository, *mutationResolver) {
+	mockExampleSentenceRepo := new(mocks.MockExampleSentenceRepository)
+	resolver := &mutationResolver{
+		Resolver: &Resolver{
+			ExampleSentenceRepo: mockExampleSentenceRepo,
+		},
+	}
+
+	return mockExampleSentenceRepo, resolver
+}
+
 func TestAddPolishWord(t *testing.T) {
 
 	mockRepo, mutation := setupTestMutationResolver()
@@ -316,7 +327,7 @@ func TestGetSingleTranslationByID(t *testing.T) {
 
 	translationID := "1"
 
-		expected := &model.Translation{
+	expected := &model.Translation{
 		ID:          translationID,
 		EnglishWord: "translation",
 		PolishWord: &model.PolishWord{
@@ -340,6 +351,32 @@ func TestGetSingleTranslationByID(t *testing.T) {
 	mockRepo.On("GetSingleTranslationByID", mock.Anything, translationID).Return(expected, nil).Once()
 
 	result, err := query.TranslationRepo.GetSingleTranslationByID(context.Background(), translationID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAddExample(t *testing.T) {
+	mockRepo, resolver := setupTestExampleSentenceMutationResolver()
+
+	translationID := "1"
+
+	input := model.AddExampleSentenceInput{
+		SentencePl: "Zdanie testowe PL",
+		SentenceEn: "Test sentence EN",
+	}
+
+	expected := &model.ExampleSentence{
+		ID:         "1",
+		SentencePl: "Zdanie testowe PL",
+		SentenceEn: "Test sentence EN",
+	}
+
+	mockRepo.On("AddExampleSentence", mock.Anything, translationID, input).Return(expected, nil).Once()
+
+	result, err := resolver.ExampleSentenceRepo.AddExampleSentence(context.Background(), translationID, input)
 
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)

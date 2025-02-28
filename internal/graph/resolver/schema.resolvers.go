@@ -44,7 +44,7 @@ func (r *mutationResolver) UpdateTranslation(ctx context.Context, id string, edi
 
 // AddExampleSentence is the resolver for the addExampleSentence field.
 func (r *mutationResolver) AddExampleSentence(ctx context.Context, translationID string, exampleSentence model.AddExampleSentenceInput) (*model.ExampleSentence, error) {
-	panic(fmt.Errorf("not implemented: AddExampleSentence - addExampleSentence"))
+	return r.ExampleSentenceRepo.AddExampleSentence(ctx, translationID, exampleSentence)
 }
 
 // DeleteExampleSentence is the resolver for the deleteExampleSentence field.

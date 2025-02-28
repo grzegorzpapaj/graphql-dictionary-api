@@ -8,7 +8,8 @@ import (
 )
 
 type TranslationRepositoryDB struct {
-	DB *sql.DB
+	DB                  *sql.DB
+	ExampleSentenceRepo *ExampleSentenceRepositoryDB
 }
 
 func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error) {
@@ -45,18 +46,11 @@ func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWor
 	}
 
 	for _, es := range translation.ExampleSentences {
-		newExampleSentence := &model.ExampleSentence{
-			SentencePl: es.SentencePl,
-			SentenceEn: es.SentenceEn,
-		}
-
-		err = tr.DB.QueryRowContext(ctx, "INSERT INTO example_sentences(sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
-			newExampleSentence.SentencePl, newExampleSentence.SentenceEn, newTranslation.ID).Scan(&newExampleSentence.ID)
+		newExampleSentence, err := tr.ExampleSentenceRepo.AddExampleSentence(ctx, newTranslation.ID, *es)
 
 		if err != nil {
 			return nil, err
 		}
-
 		newTranslation.ExampleSentences = append(newTranslation.ExampleSentences, newExampleSentence)
 	}
 	return newTranslation, nil

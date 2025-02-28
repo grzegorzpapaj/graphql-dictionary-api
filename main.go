@@ -36,15 +36,22 @@ func main() {
 func startServer(db *sql.DB) {
 	port := os.Getenv("PORT")
 
-	translationRepo := &repository.TranslationRepositoryDB{DB: db}
+	exampleSentenceRepo := &repository.ExampleSentenceRepositoryDB{DB: db}
+
+	translationRepo := &repository.TranslationRepositoryDB{
+		DB:                  db,
+		ExampleSentenceRepo: exampleSentenceRepo,
+	}
+
 	polishWordRepo := &repository.PolishWordRepositoryDB{
 		DB:              db,
 		TranslationRepo: translationRepo,
 	}
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &resolver.Resolver{
-		PolishWordRepo:  polishWordRepo,
-		TranslationRepo: translationRepo,
+		PolishWordRepo:      polishWordRepo,
+		TranslationRepo:     translationRepo,
+		ExampleSentenceRepo: exampleSentenceRepo,
 	}}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
