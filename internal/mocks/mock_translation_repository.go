@@ -13,31 +13,20 @@ type MockTranslationRepository struct {
 
 func (m *MockTranslationRepository) AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error) {
 
-	args := m.Called(ctx, polishWordID, polishWord, translation)
-
-	if result, ok := args.Get(0).(*model.Translation); ok {
-		return result, args.Error(1)
-	}
-	return nil, args.Error(1)
+	return GetMockResult[*model.Translation](m.Called(ctx, polishWordID, polishWord, translation))
 }
 
 func (m *MockTranslationRepository) DeleteTranslation(ctx context.Context, id string) (*model.Translation, error) {
 
-	args := m.Called(ctx, id)
-
-	if result, ok := args.Get(0).(*model.Translation); ok {
-		return result, args.Error(1)
-	}
-	return nil, args.Error(1)
+	return GetMockResult[*model.Translation](m.Called(ctx, id))
 }
 
 func (m *MockTranslationRepository) UpdateTranslation(ctx context.Context, id string, edits model.EditTranslationInput) (*model.Translation, error) {
 
-	args := m.Called(ctx, id, edits)
+	return GetMockResult[*model.Translation](m.Called(ctx, id, edits))
+}
 
-	if result, ok := args.Get(0).(*model.Translation); ok {
-		return result, args.Error(1)
-	}
+func (m *MockTranslationRepository) GetSingleTranslationByID(ctx context.Context, id string) (*model.Translation, error) {
 
-	return nil, args.Error(1)
+	return GetMockResult[*model.Translation](m.Called(ctx, id))
 }
