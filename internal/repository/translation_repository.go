@@ -94,4 +94,17 @@ func (tr *TranslationRepositoryDB) UpdateTranslation(ctx context.Context, id str
 	if err != nil {
 		return nil, err
 	}
+
+	if err := UpdateSingleTranslation(ctx, tr.DB, &translation, &edits); err != nil {
+		return nil, err
+	}
+
+	err = tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1",
+		translation.PolishWord.ID).Scan(&translation.PolishWord.Word)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &translation, nil
 }
