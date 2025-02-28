@@ -23,7 +23,7 @@ type Query {
     polishWords: [PolishWord] 
     translation(id: ID!): Translation 
     exampleSentence(id: ID!): ExampleSentence 
-    exampleSentences(englishWord: String): [ExampleSentence] 
+    exampleSentences(translationId: ID!): [ExampleSentence] 
 } 
 
 type Mutation { 
@@ -35,9 +35,9 @@ type Mutation {
     deleteTranslation(id: ID!): Translation
     updateTranslation(id: ID!, edits: EditTranslationInput!): Translation
 
-    addExampleSentence(translationId: ID, translation: String, exampleSentence: AddExampleSentenceInput): ExampleSentence
-    deleteExampleSentence(id: ID): ExampleSentence
-    updateExampleSentence(id: ID, edits: EditExampleSentenceInput): ExampleSentence
+    addExampleSentence(translationId: ID!, exampleSentence: AddExampleSentenceInput!): ExampleSentence
+    deleteExampleSentence(id: ID!): ExampleSentence
+    updateExampleSentence(id: ID!, edits: EditExampleSentenceInput!): ExampleSentence
 } 
 
 input AddExampleSentenceInput { 
