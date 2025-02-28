@@ -248,10 +248,10 @@ func TestDeleteTranslation(t *testing.T) {
 	idToDelete := "1"
 
 	expected := &model.Translation{
-		ID: "1",
+		ID:          "1",
 		EnglishWord: "delete_translation",
 		PolishWord: &model.PolishWord{
-			ID: "1",
+			ID:   "1",
 			Word: "test_polish_word",
 		},
 
@@ -261,6 +261,50 @@ func TestDeleteTranslation(t *testing.T) {
 	mockRepo.On("DeleteTranslation", mock.Anything, idToDelete).Return(expected, nil).Once()
 
 	result, err := mutation.DeleteTranslation(context.Background(), idToDelete)
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUpdateTranslation(t *testing.T) {
+	mockRepo, mutation := setupTestTranslationMutationResolver()
+
+	id := "1"
+	newEnglishWord := "updated_translation"
+	newSentencePL := "Nowe zdanie PL"
+	newSentenceEN := "New sentence EN"
+
+	editTranslation := model.EditTranslationInput{
+		EnglishWord: &newEnglishWord,
+		ExampleSentences: []*model.EditExampleSentenceInput{
+			{
+				SentencePl: &newSentencePL,
+				SentenceEn: &newSentenceEN,
+			},
+		},
+	}
+
+	expected := &model.Translation{
+		ID:          id,
+		EnglishWord: newEnglishWord,
+		PolishWord: &model.PolishWord{
+			ID:   "1",
+			Word: "test_polish_word",
+		},
+		ExampleSentences: []*model.ExampleSentence{
+			{
+				ID:         "1",
+				SentencePl: newSentencePL,
+				SentenceEn: newSentenceEN,
+			},
+		},
+	}
+
+	mockRepo.On("UpdateTranslation", mock.Anything, id, editTranslation).Return(expected, nil).Once()
+
+	result, err := mutation.TranslationRepo.UpdateTranslation(context.Background(), id, editTranslation)
+
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
 
