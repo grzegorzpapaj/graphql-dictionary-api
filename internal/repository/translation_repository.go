@@ -108,3 +108,32 @@ func (tr *TranslationRepositoryDB) UpdateTranslation(ctx context.Context, id str
 
 	return &translation, nil
 }
+
+func (tr *TranslationRepositoryDB) GetSingleTranslationByID(ctx context.Context, id string) (*model.Translation, error) {
+	var translation model.Translation
+	translation.PolishWord = &model.PolishWord{}
+
+	err := tr.DB.QueryRowContext(ctx, "SELECT id, english_word, polish_word_id FROM translations WHERE id = $1", id).
+		Scan(&translation.ID, &translation.EnglishWord, &translation.PolishWord.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1", translation.PolishWord.ID).
+		Scan(&translation.PolishWord.Word)
+
+	if err != nil {
+		return nil, err
+	}
+
+	examples, err := GetCurrentExampleSentencesFromDB(ctx, tr.DB, translation.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	translation.ExampleSentences = examples
+
+	return &translation, nil
+}

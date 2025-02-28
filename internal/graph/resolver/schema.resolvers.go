@@ -69,7 +69,7 @@ func (r *queryResolver) PolishWords(ctx context.Context) ([]*model.PolishWord, e
 
 // Translation is the resolver for the translation field.
 func (r *queryResolver) Translation(ctx context.Context, id string) (*model.Translation, error) {
-	panic(fmt.Errorf("not implemented: Translation - translation"))
+	return r.TranslationRepo.GetSingleTranslationByID(ctx, id)
 }
 
 // ExampleSentence is the resolver for the exampleSentence field.
