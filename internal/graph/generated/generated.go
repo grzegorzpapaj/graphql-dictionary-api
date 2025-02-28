@@ -54,13 +54,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddExampleSentence    func(childComplexity int, translationID *string, translation *string, exampleSentence *model.AddExampleSentenceInput) int
+		AddExampleSentence    func(childComplexity int, translationID string, exampleSentence model.AddExampleSentenceInput) int
 		AddPolishWord         func(childComplexity int, polishWord model.AddPolishWordInput) int
 		AddTranslation        func(childComplexity int, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) int
-		DeleteExampleSentence func(childComplexity int, id *string) int
+		DeleteExampleSentence func(childComplexity int, id string) int
 		DeletePolishWord      func(childComplexity int, id *string, word *string) int
 		DeleteTranslation     func(childComplexity int, id string) int
-		UpdateExampleSentence func(childComplexity int, id *string, edits *model.EditExampleSentenceInput) int
+		UpdateExampleSentence func(childComplexity int, id string, edits model.EditExampleSentenceInput) int
 		UpdatePolishWord      func(childComplexity int, id *string, word *string, edits *model.EditPolishWordInput) int
 		UpdateTranslation     func(childComplexity int, id string, edits model.EditTranslationInput) int
 	}
@@ -73,7 +73,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		ExampleSentence  func(childComplexity int, id string) int
-		ExampleSentences func(childComplexity int, englishWord *string) int
+		ExampleSentences func(childComplexity int, translationID string) int
 		PolishWord       func(childComplexity int, id *string, word *string) int
 		PolishWords      func(childComplexity int) int
 		Translation      func(childComplexity int, id string) int
@@ -94,16 +94,16 @@ type MutationResolver interface {
 	AddTranslation(ctx context.Context, polishWordID *string, polishWord *string, translation *model.AddTranslationInput) (*model.Translation, error)
 	DeleteTranslation(ctx context.Context, id string) (*model.Translation, error)
 	UpdateTranslation(ctx context.Context, id string, edits model.EditTranslationInput) (*model.Translation, error)
-	AddExampleSentence(ctx context.Context, translationID *string, translation *string, exampleSentence *model.AddExampleSentenceInput) (*model.ExampleSentence, error)
-	DeleteExampleSentence(ctx context.Context, id *string) (*model.ExampleSentence, error)
-	UpdateExampleSentence(ctx context.Context, id *string, edits *model.EditExampleSentenceInput) (*model.ExampleSentence, error)
+	AddExampleSentence(ctx context.Context, translationID string, exampleSentence model.AddExampleSentenceInput) (*model.ExampleSentence, error)
+	DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error)
+	UpdateExampleSentence(ctx context.Context, id string, edits model.EditExampleSentenceInput) (*model.ExampleSentence, error)
 }
 type QueryResolver interface {
 	PolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error)
 	PolishWords(ctx context.Context) ([]*model.PolishWord, error)
 	Translation(ctx context.Context, id string) (*model.Translation, error)
 	ExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error)
-	ExampleSentences(ctx context.Context, englishWord *string) ([]*model.ExampleSentence, error)
+	ExampleSentences(ctx context.Context, translationID string) ([]*model.ExampleSentence, error)
 }
 
 type executableSchema struct {
@@ -163,7 +163,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.AddExampleSentence(childComplexity, args["translationId"].(*string), args["translation"].(*string), args["exampleSentence"].(*model.AddExampleSentenceInput)), true
+		return e.complexity.Mutation.AddExampleSentence(childComplexity, args["translationId"].(string), args["exampleSentence"].(model.AddExampleSentenceInput)), true
 
 	case "Mutation.addPolishWord":
 		if e.complexity.Mutation.AddPolishWord == nil {
@@ -199,7 +199,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteExampleSentence(childComplexity, args["id"].(*string)), true
+		return e.complexity.Mutation.DeleteExampleSentence(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deletePolishWord":
 		if e.complexity.Mutation.DeletePolishWord == nil {
@@ -235,7 +235,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateExampleSentence(childComplexity, args["id"].(*string), args["edits"].(*model.EditExampleSentenceInput)), true
+		return e.complexity.Mutation.UpdateExampleSentence(childComplexity, args["id"].(string), args["edits"].(model.EditExampleSentenceInput)), true
 
 	case "Mutation.updatePolishWord":
 		if e.complexity.Mutation.UpdatePolishWord == nil {
@@ -304,7 +304,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ExampleSentences(childComplexity, args["englishWord"].(*string)), true
+		return e.complexity.Query.ExampleSentences(childComplexity, args["translationId"].(string)), true
 
 	case "Query.polishWord":
 		if e.complexity.Query.PolishWord == nil {
@@ -501,7 +501,7 @@ type Query {
     polishWords: [PolishWord] 
     translation(id: ID!): Translation 
     exampleSentence(id: ID!): ExampleSentence 
-    exampleSentences(englishWord: String): [ExampleSentence] 
+    exampleSentences(translationId: ID!): [ExampleSentence] 
 } 
 
 type Mutation { 
@@ -513,9 +513,9 @@ type Mutation {
     deleteTranslation(id: ID!): Translation
     updateTranslation(id: ID!, edits: EditTranslationInput!): Translation
 
-    addExampleSentence(translationId: ID, translation: String, exampleSentence: AddExampleSentenceInput): ExampleSentence
-    deleteExampleSentence(id: ID): ExampleSentence
-    updateExampleSentence(id: ID, edits: EditExampleSentenceInput): ExampleSentence
+    addExampleSentence(translationId: ID!, exampleSentence: AddExampleSentenceInput!): ExampleSentence
+    deleteExampleSentence(id: ID!): ExampleSentence
+    updateExampleSentence(id: ID!, edits: EditExampleSentenceInput!): ExampleSentence
 } 
 
 input AddExampleSentenceInput { 
@@ -562,69 +562,46 @@ func (ec *executionContext) field_Mutation_addExampleSentence_args(ctx context.C
 		return nil, err
 	}
 	args["translationId"] = arg0
-	arg1, err := ec.field_Mutation_addExampleSentence_argsTranslation(ctx, rawArgs)
+	arg1, err := ec.field_Mutation_addExampleSentence_argsExampleSentence(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["translation"] = arg1
-	arg2, err := ec.field_Mutation_addExampleSentence_argsExampleSentence(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["exampleSentence"] = arg2
+	args["exampleSentence"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_addExampleSentence_argsTranslationID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*string, error) {
+) (string, error) {
 	if _, ok := rawArgs["translationId"]; !ok {
-		var zeroVal *string
+		var zeroVal string
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("translationId"))
 	if tmp, ok := rawArgs["translationId"]; ok {
-		return ec.unmarshalOID2ᚖstring(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal *string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_addExampleSentence_argsTranslation(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["translation"]; !ok {
-		var zeroVal *string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("translation"))
-	if tmp, ok := rawArgs["translation"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
-	}
-
-	var zeroVal *string
+	var zeroVal string
 	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_addExampleSentence_argsExampleSentence(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*model.AddExampleSentenceInput, error) {
+) (model.AddExampleSentenceInput, error) {
 	if _, ok := rawArgs["exampleSentence"]; !ok {
-		var zeroVal *model.AddExampleSentenceInput
+		var zeroVal model.AddExampleSentenceInput
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("exampleSentence"))
 	if tmp, ok := rawArgs["exampleSentence"]; ok {
-		return ec.unmarshalOAddExampleSentenceInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐAddExampleSentenceInput(ctx, tmp)
+		return ec.unmarshalNAddExampleSentenceInput2githubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐAddExampleSentenceInput(ctx, tmp)
 	}
 
-	var zeroVal *model.AddExampleSentenceInput
+	var zeroVal model.AddExampleSentenceInput
 	return zeroVal, nil
 }
 
@@ -743,18 +720,18 @@ func (ec *executionContext) field_Mutation_deleteExampleSentence_args(ctx contex
 func (ec *executionContext) field_Mutation_deleteExampleSentence_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*string, error) {
+) (string, error) {
 	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal *string
+		var zeroVal string
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalOID2ᚖstring(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal *string
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -855,36 +832,36 @@ func (ec *executionContext) field_Mutation_updateExampleSentence_args(ctx contex
 func (ec *executionContext) field_Mutation_updateExampleSentence_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*string, error) {
+) (string, error) {
 	if _, ok := rawArgs["id"]; !ok {
-		var zeroVal *string
+		var zeroVal string
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
-		return ec.unmarshalOID2ᚖstring(ctx, tmp)
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal *string
+	var zeroVal string
 	return zeroVal, nil
 }
 
 func (ec *executionContext) field_Mutation_updateExampleSentence_argsEdits(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*model.EditExampleSentenceInput, error) {
+) (model.EditExampleSentenceInput, error) {
 	if _, ok := rawArgs["edits"]; !ok {
-		var zeroVal *model.EditExampleSentenceInput
+		var zeroVal model.EditExampleSentenceInput
 		return zeroVal, nil
 	}
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("edits"))
 	if tmp, ok := rawArgs["edits"]; ok {
-		return ec.unmarshalOEditExampleSentenceInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditExampleSentenceInput(ctx, tmp)
+		return ec.unmarshalNEditExampleSentenceInput2githubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditExampleSentenceInput(ctx, tmp)
 	}
 
-	var zeroVal *model.EditExampleSentenceInput
+	var zeroVal model.EditExampleSentenceInput
 	return zeroVal, nil
 }
 
@@ -1072,28 +1049,28 @@ func (ec *executionContext) field_Query_exampleSentence_argsID(
 func (ec *executionContext) field_Query_exampleSentences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_exampleSentences_argsEnglishWord(ctx, rawArgs)
+	arg0, err := ec.field_Query_exampleSentences_argsTranslationID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["englishWord"] = arg0
+	args["translationId"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Query_exampleSentences_argsEnglishWord(
+func (ec *executionContext) field_Query_exampleSentences_argsTranslationID(
 	ctx context.Context,
 	rawArgs map[string]any,
-) (*string, error) {
-	if _, ok := rawArgs["englishWord"]; !ok {
-		var zeroVal *string
+) (string, error) {
+	if _, ok := rawArgs["translationId"]; !ok {
+		var zeroVal string
 		return zeroVal, nil
 	}
 
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("englishWord"))
-	if tmp, ok := rawArgs["englishWord"]; ok {
-		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("translationId"))
+	if tmp, ok := rawArgs["translationId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
-	var zeroVal *string
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -1862,7 +1839,7 @@ func (ec *executionContext) _Mutation_addExampleSentence(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AddExampleSentence(rctx, fc.Args["translationId"].(*string), fc.Args["translation"].(*string), fc.Args["exampleSentence"].(*model.AddExampleSentenceInput))
+		return ec.resolvers.Mutation().AddExampleSentence(rctx, fc.Args["translationId"].(string), fc.Args["exampleSentence"].(model.AddExampleSentenceInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1924,7 +1901,7 @@ func (ec *executionContext) _Mutation_deleteExampleSentence(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteExampleSentence(rctx, fc.Args["id"].(*string))
+		return ec.resolvers.Mutation().DeleteExampleSentence(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1986,7 +1963,7 @@ func (ec *executionContext) _Mutation_updateExampleSentence(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateExampleSentence(rctx, fc.Args["id"].(*string), fc.Args["edits"].(*model.EditExampleSentenceInput))
+		return ec.resolvers.Mutation().UpdateExampleSentence(rctx, fc.Args["id"].(string), fc.Args["edits"].(model.EditExampleSentenceInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2423,7 +2400,7 @@ func (ec *executionContext) _Query_exampleSentences(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ExampleSentences(rctx, fc.Args["englishWord"].(*string))
+		return ec.resolvers.Query().ExampleSentences(rctx, fc.Args["translationId"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5674,6 +5651,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAddExampleSentenceInput2githubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐAddExampleSentenceInput(ctx context.Context, v any) (model.AddExampleSentenceInput, error) {
+	res, err := ec.unmarshalInputAddExampleSentenceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNAddExampleSentenceInput2ᚕᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐAddExampleSentenceInputᚄ(ctx context.Context, v any) ([]*model.AddExampleSentenceInput, error) {
 	var vSlice []any
 	if v != nil {
@@ -5736,6 +5718,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNEditExampleSentenceInput2githubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditExampleSentenceInput(ctx context.Context, v any) (model.EditExampleSentenceInput, error) {
+	res, err := ec.unmarshalInputEditExampleSentenceInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNEditExampleSentenceInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditExampleSentenceInput(ctx context.Context, v any) (*model.EditExampleSentenceInput, error) {
@@ -6154,14 +6141,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) unmarshalOAddExampleSentenceInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐAddExampleSentenceInput(ctx context.Context, v any) (*model.AddExampleSentenceInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputAddExampleSentenceInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalOAddTranslationInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐAddTranslationInput(ctx context.Context, v any) (*model.AddTranslationInput, error) {
 	if v == nil {
 		return nil, nil
@@ -6214,14 +6193,6 @@ func (ec *executionContext) unmarshalOEditExampleSentenceInput2ᚕᚖgithubᚗco
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalOEditExampleSentenceInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditExampleSentenceInput(ctx context.Context, v any) (*model.EditExampleSentenceInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputEditExampleSentenceInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOEditPolishWordInput2ᚖgithubᚗcomᚋgrzegorzpapajᚋgraphqlᚑdictionaryᚑapiᚋinternalᚋgraphᚋmodelᚐEditPolishWordInput(ctx context.Context, v any) (*model.EditPolishWordInput, error) {

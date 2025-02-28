@@ -43,17 +43,17 @@ func (r *mutationResolver) UpdateTranslation(ctx context.Context, id string, edi
 }
 
 // AddExampleSentence is the resolver for the addExampleSentence field.
-func (r *mutationResolver) AddExampleSentence(ctx context.Context, translationID *string, translation *string, exampleSentence *model.AddExampleSentenceInput) (*model.ExampleSentence, error) {
+func (r *mutationResolver) AddExampleSentence(ctx context.Context, translationID string, exampleSentence model.AddExampleSentenceInput) (*model.ExampleSentence, error) {
 	panic(fmt.Errorf("not implemented: AddExampleSentence - addExampleSentence"))
 }
 
 // DeleteExampleSentence is the resolver for the deleteExampleSentence field.
-func (r *mutationResolver) DeleteExampleSentence(ctx context.Context, id *string) (*model.ExampleSentence, error) {
+func (r *mutationResolver) DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error) {
 	panic(fmt.Errorf("not implemented: DeleteExampleSentence - deleteExampleSentence"))
 }
 
 // UpdateExampleSentence is the resolver for the updateExampleSentence field.
-func (r *mutationResolver) UpdateExampleSentence(ctx context.Context, id *string, edits *model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
+func (r *mutationResolver) UpdateExampleSentence(ctx context.Context, id string, edits model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
 	panic(fmt.Errorf("not implemented: UpdateExampleSentence - updateExampleSentence"))
 }
 
@@ -78,7 +78,7 @@ func (r *queryResolver) ExampleSentence(ctx context.Context, id string) (*model.
 }
 
 // ExampleSentences is the resolver for the exampleSentences field.
-func (r *queryResolver) ExampleSentences(ctx context.Context, englishWord *string) ([]*model.ExampleSentence, error) {
+func (r *queryResolver) ExampleSentences(ctx context.Context, translationID string) ([]*model.ExampleSentence, error) {
 	panic(fmt.Errorf("not implemented: ExampleSentences - exampleSentences"))
 }
 
