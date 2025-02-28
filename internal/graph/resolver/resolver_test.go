@@ -310,3 +310,39 @@ func TestUpdateTranslation(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetSingleTranslationByID(t *testing.T) {
+	mockRepo, query := setupTestTranslationMutationResolver()
+
+	translationID := "1"
+
+		expected := &model.Translation{
+		ID:          translationID,
+		EnglishWord: "translation",
+		PolishWord: &model.PolishWord{
+			ID:   "1",
+			Word: "test_polishword",
+		},
+		ExampleSentences: []*model.ExampleSentence{
+			{
+				ID:         "1",
+				SentencePl: "Testowe zdanie",
+				SentenceEn: "Test sentence",
+			},
+			{
+				ID:         "2",
+				SentencePl: "Kolejne testowe zdanie",
+				SentenceEn: "Another test sentence",
+			},
+		},
+	}
+
+	mockRepo.On("GetSingleTranslationByID", mock.Anything, translationID).Return(expected, nil).Once()
+
+	result, err := query.TranslationRepo.GetSingleTranslationByID(context.Background(), translationID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
