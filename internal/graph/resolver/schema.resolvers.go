@@ -74,7 +74,7 @@ func (r *queryResolver) Translation(ctx context.Context, id string) (*model.Tran
 
 // ExampleSentence is the resolver for the exampleSentence field.
 func (r *queryResolver) ExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error) {
-	panic(fmt.Errorf("not implemented: ExampleSentence - exampleSentence"))
+	return r.ExampleSentenceRepo.GetSingleExampleSentence(ctx, id)
 }
 
 // ExampleSentences is the resolver for the exampleSentences field.
