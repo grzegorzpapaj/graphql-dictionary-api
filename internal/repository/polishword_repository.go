@@ -125,3 +125,20 @@ func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*mo
 
 	return polishWords, nil
 }
+
+func (pwr *PolishWordRepositoryDB) GetSinglePolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error) {
+	pw, err := pwr.fetchPolishWords(ctx, id, word)
+
+	if err != nil {
+		return nil, err
+	}
+
+	translations, err := pwr.getTranslationsWithExampleSentences(ctx, pw.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	pw.Translations = translations
+
+	return pw, nil
+}

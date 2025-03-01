@@ -59,7 +59,7 @@ func (r *mutationResolver) UpdateExampleSentence(ctx context.Context, id string,
 
 // PolishWord is the resolver for the polishWord field.
 func (r *queryResolver) PolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error) {
-	panic(fmt.Errorf("not implemented: PolishWord - polishWord"))
+	return r.PolishWordRepo.GetSinglePolishWord(ctx, id, word)
 }
 
 // PolishWords is the resolver for the polishWords field.
