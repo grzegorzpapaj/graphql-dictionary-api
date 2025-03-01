@@ -509,3 +509,38 @@ func TestGetSinglePolishWordNoParametersError(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetAllPolishWords(t *testing.T) {
+	mockRepo, query := setupTestMutationResolver()
+
+	expected := []*model.PolishWord{
+		{
+			ID:   "1",
+			Word: "test_word",
+			Translations: []*model.Translation{
+				{
+					ID:          "1",
+					EnglishWord: "test_english_word",
+				},
+			},
+		},
+		{
+			ID:   "2",
+			Word: "another_word",
+			Translations: []*model.Translation{
+				{
+					ID:          "2",
+					EnglishWord: "another_english_word",
+				},
+			},
+		},
+	}
+
+	mockRepo.On("GetAllPolishWords", mock.Anything).Return(expected, nil).Once()
+
+	result, err := query.PolishWordRepo.GetAllPolishWords(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
