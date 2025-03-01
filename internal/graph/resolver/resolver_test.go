@@ -438,3 +438,74 @@ func TestUpdateExample(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetSinglePolishWordByID(t *testing.T) {
+	mockRepo, query := setupTestMutationResolver()
+
+	id := "1"
+	var word *string = nil
+
+	expected := &model.PolishWord{
+		ID:   "1",
+		Word: "test_word",
+		Translations: []*model.Translation{
+			{
+				ID:          "1",
+				EnglishWord: "test_english_word",
+			},
+		},
+	}
+
+	mockRepo.On("GetSinglePolishWord", mock.Anything, &id, word).Return(expected, nil).Once()
+
+	result, err := query.PolishWordRepo.GetSinglePolishWord(context.Background(), &id, word)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetSinglePolishWordByWord(t *testing.T) {
+	mockRepo, query := setupTestMutationResolver()
+
+	var id *string = nil
+	word := "test_word"
+
+	expected := &model.PolishWord{
+		ID:   "1",
+		Word: "test_word",
+		Translations: []*model.Translation{
+			{
+				ID:          "1",
+				EnglishWord: "test_english_word",
+			},
+		},
+	}
+
+	mockRepo.On("GetSinglePolishWord", mock.Anything, id, &word).Return(expected, nil).Once()
+
+	result, err := query.PolishWordRepo.GetSinglePolishWord(context.Background(), id, &word)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetSinglePolishWordNoParametersError(t *testing.T) {
+	mockRepo, query := setupTestMutationResolver()
+
+	var id *string = nil
+	var word *string = nil
+
+	mockRepo.On("GetSinglePolishWord", mock.Anything, id, word).Return(nil, errors.New("either id or word must be provided")).Once()
+
+	result, err := query.PolishWordRepo.GetSinglePolishWord(context.Background(), id, word)
+
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "either id or word must be provided")
+
+	mockRepo.AssertExpectations(t)
+}

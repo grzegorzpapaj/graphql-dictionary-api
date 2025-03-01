@@ -30,3 +30,8 @@ func (m *MockPolishWordRepository) GetAllPolishWords(ctx context.Context) ([]*mo
 
 	return GetMockResult[[]*model.PolishWord](m.Called(ctx))
 }
+
+func (m *MockPolishWordRepository) GetSinglePolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error) {
+
+	return GetMockResult[*model.PolishWord](m.Called(ctx, id, word))
+}
