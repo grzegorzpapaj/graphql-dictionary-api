@@ -56,3 +56,33 @@ func (esr *ExampleSentenceRepositoryDB) DeleteExampleSentence(ctx context.Contex
 
 	return deletedEs, nil
 }
+
+func (esr *ExampleSentenceRepositoryDB) UpdateExampleSentence(ctx context.Context, id string, edits model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
+
+	es := &model.ExampleSentence{
+		ID:          id,
+		Translation: &model.Translation{},
+	}
+
+	var translationID string
+
+	err := esr.DB.QueryRowContext(ctx, "SELECT sentence_pl, sentence_en, translation_id FROM example_sentences WHERE id = $1", id).
+		Scan(&es.SentencePl, &es.SentenceEn, &translationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := UpdateSingleExampleSentence(ctx, esr.DB, es, &edits); err != nil {
+		return nil, err
+	}
+
+	translation, err := esr.fetchTranslationAndPolishWord(ctx, translationID)
+	if err != nil {
+		return nil, err
+	}
+
+	es.Translation = translation
+
+	return es, nil
+}

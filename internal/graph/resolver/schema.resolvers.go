@@ -54,7 +54,7 @@ func (r *mutationResolver) DeleteExampleSentence(ctx context.Context, id string)
 
 // UpdateExampleSentence is the resolver for the updateExampleSentence field.
 func (r *mutationResolver) UpdateExampleSentence(ctx context.Context, id string, edits model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
-	panic(fmt.Errorf("not implemented: UpdateExampleSentence - updateExampleSentence"))
+	return r.ExampleSentenceRepo.UpdateExampleSentence(ctx, id, edits)
 }
 
 // PolishWord is the resolver for the polishWord field.
