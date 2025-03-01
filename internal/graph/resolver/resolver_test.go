@@ -406,3 +406,35 @@ func TestDeleteExample(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestUpdateExample(t *testing.T) {
+
+	mockRepo, mutation := setupTestExampleSentenceMutationResolver()
+
+	exampleID := "1"
+	newSentencePL := "Zaktualizowane zdanie PL"
+	newSentenceEN := "Updated sentence EN"
+
+	edits := model.EditExampleSentenceInput{
+		SentencePl: &newSentencePL,
+		SentenceEn: &newSentenceEN,
+	}
+
+	expectedExample := &model.ExampleSentence{
+		ID:         exampleID,
+		SentencePl: newSentencePL,
+		SentenceEn: newSentenceEN,
+		Translation: &model.Translation{
+			ID: "1",
+		},
+	}
+
+	mockRepo.On("UpdateExampleSentence", mock.Anything, exampleID, edits).Return(expectedExample, nil).Once()
+
+	result, err := mutation.ExampleSentenceRepo.UpdateExampleSentence(context.Background(), exampleID, edits)
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedExample, result)
+
+	mockRepo.AssertExpectations(t)
+}

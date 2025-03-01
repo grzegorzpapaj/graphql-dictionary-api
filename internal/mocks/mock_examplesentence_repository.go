@@ -18,3 +18,7 @@ func (m *MockExampleSentenceRepository) AddExampleSentence(ctx context.Context, 
 func (m *MockExampleSentenceRepository) DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error) {
 	return GetMockResult[*model.ExampleSentence](m.Called(ctx, id))
 }
+
+func (m *MockExampleSentenceRepository) UpdateExampleSentence(ctx context.Context, id string, edits model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
+	return GetMockResult[*model.ExampleSentence](m.Called(ctx, id, edits))
+}
