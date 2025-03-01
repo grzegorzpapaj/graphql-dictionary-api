@@ -49,7 +49,7 @@ func (r *mutationResolver) AddExampleSentence(ctx context.Context, translationID
 
 // DeleteExampleSentence is the resolver for the deleteExampleSentence field.
 func (r *mutationResolver) DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error) {
-	panic(fmt.Errorf("not implemented: DeleteExampleSentence - deleteExampleSentence"))
+	return r.ExampleSentenceRepo.DeleteExampleSentence(ctx, id)
 }
 
 // UpdateExampleSentence is the resolver for the updateExampleSentence field.

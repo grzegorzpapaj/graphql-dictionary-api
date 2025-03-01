@@ -8,4 +8,5 @@ import (
 
 type ExampleSentenceRepositoryInterface interface {
 	AddExampleSentence(ctx context.Context, translationID string, exampleSentence model.AddExampleSentenceInput) (*model.ExampleSentence, error)
+	DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error)
 }
