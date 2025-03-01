@@ -544,3 +544,27 @@ func TestGetAllPolishWords(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetSingleExampleSentence(t *testing.T) {
+	mockRepo, query := setupTestExampleSentenceMutationResolver()
+
+	exampleID := "1"
+	expectedExample := &model.ExampleSentence{
+		ID:         "exampleID",
+		SentencePl: "Zdanie testowe PL",
+		SentenceEn: "Test sentence EN",
+		Translation: &model.Translation{
+			ID:          "1",
+			EnglishWord: "test_translation",
+		},
+	}
+
+	mockRepo.On("GetSingleExampleSentence", mock.Anything, exampleID).Return(expectedExample, nil).Once()
+
+	result, err := query.ExampleSentenceRepo.GetSingleExampleSentence(context.Background(), exampleID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedExample, result)
+
+	mockRepo.AssertExpectations(t)
+}
