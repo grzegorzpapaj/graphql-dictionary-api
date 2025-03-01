@@ -112,3 +112,25 @@ func (esr *ExampleSentenceRepositoryDB) GetSingleExampleSentence(ctx context.Con
 
 	return es, nil
 }
+
+func (esr *ExampleSentenceRepositoryDB) GetExampleSentencesByTranslationId(ctx context.Context, translationID string) ([]*model.ExampleSentence, error) {
+
+	exampleSentences, err := GetCurrentExampleSentencesFromDB(ctx, esr.DB, translationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, es := range exampleSentences {
+
+		translation, err := esr.fetchTranslationAndPolishWord(ctx, translationID)
+
+		if err != nil {
+			return nil, err
+		}
+
+		es.Translation = translation
+	}
+
+	return exampleSentences, nil
+}

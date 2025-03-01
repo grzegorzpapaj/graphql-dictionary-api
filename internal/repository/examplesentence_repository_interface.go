@@ -11,4 +11,5 @@ type ExampleSentenceRepositoryInterface interface {
 	DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error)
 	UpdateExampleSentence(ctx context.Context, id string, edits model.EditExampleSentenceInput) (*model.ExampleSentence, error)
 	GetSingleExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error)
+	GetExampleSentencesByTranslationId(ctx context.Context, translationID string) ([]*model.ExampleSentence, error)
 }

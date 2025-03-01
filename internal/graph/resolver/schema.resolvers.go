@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/generated"
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
@@ -79,7 +78,7 @@ func (r *queryResolver) ExampleSentence(ctx context.Context, id string) (*model.
 
 // ExampleSentences is the resolver for the exampleSentences field.
 func (r *queryResolver) ExampleSentences(ctx context.Context, translationID string) ([]*model.ExampleSentence, error) {
-	panic(fmt.Errorf("not implemented: ExampleSentences - exampleSentences"))
+	return r.ExampleSentenceRepo.GetExampleSentencesByTranslationId(ctx, translationID)
 }
 
 // Mutation returns generated.MutationResolver implementation.
