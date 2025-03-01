@@ -359,7 +359,7 @@ func TestGetSingleTranslationByID(t *testing.T) {
 }
 
 func TestAddExample(t *testing.T) {
-	mockRepo, resolver := setupTestExampleSentenceMutationResolver()
+	mockRepo, mutation := setupTestExampleSentenceMutationResolver()
 
 	translationID := "1"
 
@@ -376,10 +376,33 @@ func TestAddExample(t *testing.T) {
 
 	mockRepo.On("AddExampleSentence", mock.Anything, translationID, input).Return(expected, nil).Once()
 
-	result, err := resolver.ExampleSentenceRepo.AddExampleSentence(context.Background(), translationID, input)
+	result, err := mutation.ExampleSentenceRepo.AddExampleSentence(context.Background(), translationID, input)
 
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestDeleteExample(t *testing.T) {
+	mockRepo, mutation := setupTestExampleSentenceMutationResolver()
+
+	exampleID := "1"
+
+	expectedExample := &model.ExampleSentence{
+		ID:         exampleID,
+		SentencePl: "Zdanie testowe PL",
+		SentenceEn: "Test sentence EN",
+		Translation: &model.Translation{
+			ID: "1",
+		},
+	}
+
+	mockRepo.On("DeleteExampleSentence", mock.Anything, exampleID).Return(expectedExample, nil).Once()
+	result, err := mutation.ExampleSentenceRepo.DeleteExampleSentence(context.Background(), exampleID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedExample, result)
 
 	mockRepo.AssertExpectations(t)
 }

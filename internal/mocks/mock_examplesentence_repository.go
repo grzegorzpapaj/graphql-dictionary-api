@@ -14,3 +14,7 @@ type MockExampleSentenceRepository struct {
 func (m *MockExampleSentenceRepository) AddExampleSentence(ctx context.Context, translationID string, exampleSentence model.AddExampleSentenceInput) (*model.ExampleSentence, error) {
 	return GetMockResult[*model.ExampleSentence](m.Called(ctx, translationID, exampleSentence))
 }
+
+func (m *MockExampleSentenceRepository) DeleteExampleSentence(ctx context.Context, id string) (*model.ExampleSentence, error) {
+	return GetMockResult[*model.ExampleSentence](m.Called(ctx, id))
+}
