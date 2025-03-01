@@ -568,3 +568,41 @@ func TestGetSingleExampleSentence(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestGetExampleSentencesByTranslationId(t *testing.T) {
+	// Use the helper to get a mock ExampleSentence repository.
+	mockRepo, _ := setupTestExampleSentenceMutationResolver()
+
+	translationID := "1"
+
+	expected := []*model.ExampleSentence{
+		{
+			ID:         "1",
+			SentencePl: "Test sentence PL",
+			SentenceEn: "Test sentence EN",
+			Translation: &model.Translation{
+				ID: translationID,
+			},
+		},
+		{
+			ID:         "2",
+			SentencePl: "Another sentence PL",
+			SentenceEn: "Another sentence EN",
+			Translation: &model.Translation{
+				ID: translationID,
+			},
+		},
+	}
+
+	mockRepo.
+		On("GetExampleSentencesByTranslationId", mock.Anything, translationID).
+		Return(expected, nil).
+		Once()
+
+	result, err := mockRepo.GetExampleSentencesByTranslationId(context.Background(), translationID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, result)
+
+	mockRepo.AssertExpectations(t)
+}

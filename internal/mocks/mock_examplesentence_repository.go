@@ -30,3 +30,8 @@ func (m *MockExampleSentenceRepository) GetSingleExampleSentence(ctx context.Con
 
 	return GetMockResult[*model.ExampleSentence](m.Called(ctx, id))
 }
+
+func (m *MockExampleSentenceRepository) GetExampleSentencesByTranslationId(ctx context.Context, translationID string) ([]*model.ExampleSentence, error) {
+
+	return GetMockResult[[]*model.ExampleSentence](m.Called(ctx, translationID))
+}
