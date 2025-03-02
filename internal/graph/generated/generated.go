@@ -51,6 +51,7 @@ type ComplexityRoot struct {
 		SentenceEn  func(childComplexity int) int
 		SentencePl  func(childComplexity int) int
 		Translation func(childComplexity int) int
+		Version     func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -68,6 +69,7 @@ type ComplexityRoot struct {
 	PolishWord struct {
 		ID           func(childComplexity int) int
 		Translations func(childComplexity int) int
+		Version      func(childComplexity int) int
 		Word         func(childComplexity int) int
 	}
 
@@ -84,6 +86,7 @@ type ComplexityRoot struct {
 		ExampleSentences func(childComplexity int) int
 		ID               func(childComplexity int) int
 		PolishWord       func(childComplexity int) int
+		Version          func(childComplexity int) int
 	}
 }
 
@@ -152,6 +155,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExampleSentence.Translation(childComplexity), true
+
+	case "ExampleSentence.version":
+		if e.complexity.ExampleSentence.Version == nil {
+			break
+		}
+
+		return e.complexity.ExampleSentence.Version(childComplexity), true
 
 	case "Mutation.addExampleSentence":
 		if e.complexity.Mutation.AddExampleSentence == nil {
@@ -275,6 +285,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PolishWord.Translations(childComplexity), true
 
+	case "PolishWord.version":
+		if e.complexity.PolishWord.Version == nil {
+			break
+		}
+
+		return e.complexity.PolishWord.Version(childComplexity), true
+
 	case "PolishWord.word":
 		if e.complexity.PolishWord.Word == nil {
 			break
@@ -364,6 +381,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Translation.PolishWord(childComplexity), true
+
+	case "Translation.version":
+		if e.complexity.Translation.Version == nil {
+			break
+		}
+
+		return e.complexity.Translation.Version(childComplexity), true
 
 	}
 	return 0, false
@@ -480,6 +504,7 @@ var sources = []*ast.Source{
     id: ID!
     word: String!
     translations: [Translation!]!
+    version: Int!
 }
 
 type Translation {
@@ -487,6 +512,7 @@ type Translation {
     englishWord: String!
     polishWord: PolishWord!
     exampleSentences: [ExampleSentence!]!
+    version: Int!
 }
 
 type ExampleSentence {
@@ -494,6 +520,7 @@ type ExampleSentence {
     translation: Translation!
     sentencePl: String!
     sentenceEn: String!
+    version: Int!
 }
 
 type Query { 
@@ -536,16 +563,19 @@ input AddPolishWordInput {
 input EditExampleSentenceInput { 
     sentencePl: String
     sentenceEn: String
+    version: Int!
 }
     
 input EditTranslationInput { 
     englishWord: String  
     exampleSentences: [EditExampleSentenceInput!]
+    version: Int!
 }
 
 input EditPolishWordInput {
     word: String
     translations: [EditTranslationInput!]
+    version: Int!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1364,6 +1394,8 @@ func (ec *executionContext) fieldContext_ExampleSentence_translation(_ context.C
 				return ec.fieldContext_Translation_polishWord(ctx, field)
 			case "exampleSentences":
 				return ec.fieldContext_Translation_exampleSentences(ctx, field)
+			case "version":
+				return ec.fieldContext_Translation_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Translation", field.Name)
 		},
@@ -1459,6 +1491,50 @@ func (ec *executionContext) fieldContext_ExampleSentence_sentenceEn(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _ExampleSentence_version(ctx context.Context, field graphql.CollectedField, obj *model.ExampleSentence) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ExampleSentence_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ExampleSentence_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExampleSentence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_addPolishWord(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_addPolishWord(ctx, field)
 	if err != nil {
@@ -1501,6 +1577,8 @@ func (ec *executionContext) fieldContext_Mutation_addPolishWord(ctx context.Cont
 				return ec.fieldContext_PolishWord_word(ctx, field)
 			case "translations":
 				return ec.fieldContext_PolishWord_translations(ctx, field)
+			case "version":
+				return ec.fieldContext_PolishWord_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PolishWord", field.Name)
 		},
@@ -1561,6 +1639,8 @@ func (ec *executionContext) fieldContext_Mutation_deletePolishWord(ctx context.C
 				return ec.fieldContext_PolishWord_word(ctx, field)
 			case "translations":
 				return ec.fieldContext_PolishWord_translations(ctx, field)
+			case "version":
+				return ec.fieldContext_PolishWord_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PolishWord", field.Name)
 		},
@@ -1621,6 +1701,8 @@ func (ec *executionContext) fieldContext_Mutation_updatePolishWord(ctx context.C
 				return ec.fieldContext_PolishWord_word(ctx, field)
 			case "translations":
 				return ec.fieldContext_PolishWord_translations(ctx, field)
+			case "version":
+				return ec.fieldContext_PolishWord_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PolishWord", field.Name)
 		},
@@ -1683,6 +1765,8 @@ func (ec *executionContext) fieldContext_Mutation_addTranslation(ctx context.Con
 				return ec.fieldContext_Translation_polishWord(ctx, field)
 			case "exampleSentences":
 				return ec.fieldContext_Translation_exampleSentences(ctx, field)
+			case "version":
+				return ec.fieldContext_Translation_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Translation", field.Name)
 		},
@@ -1745,6 +1829,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteTranslation(ctx context.
 				return ec.fieldContext_Translation_polishWord(ctx, field)
 			case "exampleSentences":
 				return ec.fieldContext_Translation_exampleSentences(ctx, field)
+			case "version":
+				return ec.fieldContext_Translation_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Translation", field.Name)
 		},
@@ -1807,6 +1893,8 @@ func (ec *executionContext) fieldContext_Mutation_updateTranslation(ctx context.
 				return ec.fieldContext_Translation_polishWord(ctx, field)
 			case "exampleSentences":
 				return ec.fieldContext_Translation_exampleSentences(ctx, field)
+			case "version":
+				return ec.fieldContext_Translation_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Translation", field.Name)
 		},
@@ -1869,6 +1957,8 @@ func (ec *executionContext) fieldContext_Mutation_addExampleSentence(ctx context
 				return ec.fieldContext_ExampleSentence_sentencePl(ctx, field)
 			case "sentenceEn":
 				return ec.fieldContext_ExampleSentence_sentenceEn(ctx, field)
+			case "version":
+				return ec.fieldContext_ExampleSentence_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExampleSentence", field.Name)
 		},
@@ -1931,6 +2021,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteExampleSentence(ctx cont
 				return ec.fieldContext_ExampleSentence_sentencePl(ctx, field)
 			case "sentenceEn":
 				return ec.fieldContext_ExampleSentence_sentenceEn(ctx, field)
+			case "version":
+				return ec.fieldContext_ExampleSentence_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExampleSentence", field.Name)
 		},
@@ -1993,6 +2085,8 @@ func (ec *executionContext) fieldContext_Mutation_updateExampleSentence(ctx cont
 				return ec.fieldContext_ExampleSentence_sentencePl(ctx, field)
 			case "sentenceEn":
 				return ec.fieldContext_ExampleSentence_sentenceEn(ctx, field)
+			case "version":
+				return ec.fieldContext_ExampleSentence_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExampleSentence", field.Name)
 		},
@@ -2146,8 +2240,54 @@ func (ec *executionContext) fieldContext_PolishWord_translations(_ context.Conte
 				return ec.fieldContext_Translation_polishWord(ctx, field)
 			case "exampleSentences":
 				return ec.fieldContext_Translation_exampleSentences(ctx, field)
+			case "version":
+				return ec.fieldContext_Translation_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Translation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PolishWord_version(ctx context.Context, field graphql.CollectedField, obj *model.PolishWord) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PolishWord_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PolishWord_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PolishWord",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2195,6 +2335,8 @@ func (ec *executionContext) fieldContext_Query_polishWord(ctx context.Context, f
 				return ec.fieldContext_PolishWord_word(ctx, field)
 			case "translations":
 				return ec.fieldContext_PolishWord_translations(ctx, field)
+			case "version":
+				return ec.fieldContext_PolishWord_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PolishWord", field.Name)
 		},
@@ -2255,6 +2397,8 @@ func (ec *executionContext) fieldContext_Query_polishWords(_ context.Context, fi
 				return ec.fieldContext_PolishWord_word(ctx, field)
 			case "translations":
 				return ec.fieldContext_PolishWord_translations(ctx, field)
+			case "version":
+				return ec.fieldContext_PolishWord_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PolishWord", field.Name)
 		},
@@ -2306,6 +2450,8 @@ func (ec *executionContext) fieldContext_Query_translation(ctx context.Context, 
 				return ec.fieldContext_Translation_polishWord(ctx, field)
 			case "exampleSentences":
 				return ec.fieldContext_Translation_exampleSentences(ctx, field)
+			case "version":
+				return ec.fieldContext_Translation_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Translation", field.Name)
 		},
@@ -2368,6 +2514,8 @@ func (ec *executionContext) fieldContext_Query_exampleSentence(ctx context.Conte
 				return ec.fieldContext_ExampleSentence_sentencePl(ctx, field)
 			case "sentenceEn":
 				return ec.fieldContext_ExampleSentence_sentenceEn(ctx, field)
+			case "version":
+				return ec.fieldContext_ExampleSentence_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExampleSentence", field.Name)
 		},
@@ -2430,6 +2578,8 @@ func (ec *executionContext) fieldContext_Query_exampleSentences(ctx context.Cont
 				return ec.fieldContext_ExampleSentence_sentencePl(ctx, field)
 			case "sentenceEn":
 				return ec.fieldContext_ExampleSentence_sentenceEn(ctx, field)
+			case "version":
+				return ec.fieldContext_ExampleSentence_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExampleSentence", field.Name)
 		},
@@ -2712,6 +2862,8 @@ func (ec *executionContext) fieldContext_Translation_polishWord(_ context.Contex
 				return ec.fieldContext_PolishWord_word(ctx, field)
 			case "translations":
 				return ec.fieldContext_PolishWord_translations(ctx, field)
+			case "version":
+				return ec.fieldContext_PolishWord_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PolishWord", field.Name)
 		},
@@ -2766,8 +2918,54 @@ func (ec *executionContext) fieldContext_Translation_exampleSentences(_ context.
 				return ec.fieldContext_ExampleSentence_sentencePl(ctx, field)
 			case "sentenceEn":
 				return ec.fieldContext_ExampleSentence_sentenceEn(ctx, field)
+			case "version":
+				return ec.fieldContext_ExampleSentence_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type ExampleSentence", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Translation_version(ctx context.Context, field graphql.CollectedField, obj *model.Translation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Translation_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Version, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Translation_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Translation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4833,7 +5031,7 @@ func (ec *executionContext) unmarshalInputEditExampleSentenceInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"sentencePl", "sentenceEn"}
+	fieldsInOrder := [...]string{"sentencePl", "sentenceEn", "version"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4854,6 +5052,13 @@ func (ec *executionContext) unmarshalInputEditExampleSentenceInput(ctx context.C
 				return it, err
 			}
 			it.SentenceEn = data
+		case "version":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Version = data
 		}
 	}
 
@@ -4867,7 +5072,7 @@ func (ec *executionContext) unmarshalInputEditPolishWordInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"word", "translations"}
+	fieldsInOrder := [...]string{"word", "translations", "version"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4888,6 +5093,13 @@ func (ec *executionContext) unmarshalInputEditPolishWordInput(ctx context.Contex
 				return it, err
 			}
 			it.Translations = data
+		case "version":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Version = data
 		}
 	}
 
@@ -4901,7 +5113,7 @@ func (ec *executionContext) unmarshalInputEditTranslationInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"englishWord", "exampleSentences"}
+	fieldsInOrder := [...]string{"englishWord", "exampleSentences", "version"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4922,6 +5134,13 @@ func (ec *executionContext) unmarshalInputEditTranslationInput(ctx context.Conte
 				return it, err
 			}
 			it.ExampleSentences = data
+		case "version":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("version"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Version = data
 		}
 	}
 
@@ -4964,6 +5183,11 @@ func (ec *executionContext) _ExampleSentence(ctx context.Context, sel ast.Select
 			}
 		case "sentenceEn":
 			out.Values[i] = ec._ExampleSentence_sentenceEn(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._ExampleSentence_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5091,6 +5315,11 @@ func (ec *executionContext) _PolishWord(ctx context.Context, sel ast.SelectionSe
 			}
 		case "translations":
 			out.Values[i] = ec._PolishWord_translations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._PolishWord_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5290,6 +5519,11 @@ func (ec *executionContext) _Translation(ctx context.Context, sel ast.SelectionS
 			}
 		case "exampleSentences":
 			out.Values[i] = ec._Translation_exampleSentences(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "version":
+			out.Values[i] = ec._Translation_version(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5801,6 +6035,21 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (str
 
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

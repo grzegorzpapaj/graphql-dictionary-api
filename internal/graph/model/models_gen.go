@@ -20,16 +20,19 @@ type AddTranslationInput struct {
 type EditExampleSentenceInput struct {
 	SentencePl *string `json:"sentencePl,omitempty"`
 	SentenceEn *string `json:"sentenceEn,omitempty"`
+	Version    int     `json:"version"`
 }
 
 type EditPolishWordInput struct {
 	Word         *string                 `json:"word,omitempty"`
 	Translations []*EditTranslationInput `json:"translations,omitempty"`
+	Version      int                     `json:"version"`
 }
 
 type EditTranslationInput struct {
 	EnglishWord      *string                     `json:"englishWord,omitempty"`
 	ExampleSentences []*EditExampleSentenceInput `json:"exampleSentences,omitempty"`
+	Version          int                         `json:"version"`
 }
 
 type ExampleSentence struct {
@@ -37,6 +40,7 @@ type ExampleSentence struct {
 	Translation *Translation `json:"translation"`
 	SentencePl  string       `json:"sentencePl"`
 	SentenceEn  string       `json:"sentenceEn"`
+	Version     int          `json:"version"`
 }
 
 type Mutation struct {
@@ -46,6 +50,7 @@ type PolishWord struct {
 	ID           string         `json:"id"`
 	Word         string         `json:"word"`
 	Translations []*Translation `json:"translations"`
+	Version      int            `json:"version"`
 }
 
 type Query struct {
@@ -56,4 +61,5 @@ type Translation struct {
 	EnglishWord      string             `json:"englishWord"`
 	PolishWord       *PolishWord        `json:"polishWord"`
 	ExampleSentences []*ExampleSentence `json:"exampleSentences"`
+	Version          int                `json:"version"`
 }
