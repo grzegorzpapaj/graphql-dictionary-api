@@ -2,6 +2,7 @@ type PolishWord {
     id: ID!
     word: String!
     translations: [Translation!]!
+    version: Int!
 }
 
 type Translation {
@@ -9,6 +10,7 @@ type Translation {
     englishWord: String!
     polishWord: PolishWord!
     exampleSentences: [ExampleSentence!]!
+    version: Int!
 }
 
 type ExampleSentence {
@@ -16,6 +18,7 @@ type ExampleSentence {
     translation: Translation!
     sentencePl: String!
     sentenceEn: String!
+    version: Int!
 }
 
 type Query { 
@@ -58,14 +61,17 @@ input AddPolishWordInput {
 input EditExampleSentenceInput { 
     sentencePl: String
     sentenceEn: String
+    version: Int!
 }
     
 input EditTranslationInput { 
     englishWord: String  
     exampleSentences: [EditExampleSentenceInput!]
+    version: Int!
 }
 
 input EditPolishWordInput {
     word: String
     translations: [EditTranslationInput!]
+    version: Int!
 }
