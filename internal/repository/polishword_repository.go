@@ -72,14 +72,24 @@ func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *str
 	}
 
 	if word == nil && edits.Word != nil {
-		_, err := pwr.DB.ExecContext(ctx,
-			"UPDATE polish_words SET word = $1 WHERE id = $2",
-			*edits.Word, polishWordToEdit.ID)
+		result, err := pwr.DB.ExecContext(ctx,
+			"UPDATE polish_words SET word = $1, version = version + 1 WHERE id = $2 AND version = $3",
+			*edits.Word, polishWordToEdit.ID, polishWordToEdit.Version)
 
 		if err != nil {
 			return nil, err
 		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return nil, err
+		}
+		if rowsAffected == 0 {
+			return nil, fmt.Errorf("this polish word has been modified by a different process")
+		}
+
 		polishWordToEdit.Word = *edits.Word
+		polishWordToEdit.Version++
 	}
 
 	if edits.Translations != nil {

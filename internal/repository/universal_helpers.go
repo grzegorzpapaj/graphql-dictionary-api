@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
 )
@@ -10,14 +11,24 @@ import (
 func UpdateSingleTranslation(ctx context.Context, db *sql.DB, translation *model.Translation, editTr *model.EditTranslationInput) error {
 
 	if editTr.EnglishWord != nil {
-		_, err := db.ExecContext(ctx, "UPDATE translations SET english_word = $1 WHERE id = $2",
-			*editTr.EnglishWord, translation.ID)
+		result, err := db.ExecContext(ctx, "UPDATE translations SET english_word = $1, version = version + 1 WHERE id = $2 AND version = $3",
+			*editTr.EnglishWord, translation.ID, translation.Version)
 
 		if err != nil {
 			return err
 		}
 
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+
+		if rowsAffected == 0 {
+			return fmt.Errorf("this translation has been modified by a different process")
+		}
+
 		translation.EnglishWord = *editTr.EnglishWord
+		translation.Version++
 	}
 
 	if editTr.ExampleSentences != nil {
@@ -111,16 +122,26 @@ func UpdateSingleExampleSentence(
 		sentenceEn = *editEs.SentenceEn
 	}
 
-	_, err := db.ExecContext(ctx,
-		"UPDATE example_sentences SET sentence_pl = $1, sentence_en = $2 WHERE id = $3",
-		sentencePl, sentenceEn, exampleSentence.ID)
+	result, err := db.ExecContext(ctx,
+		"UPDATE example_sentences SET sentence_pl = $1, sentence_en = $2, version = version + 1 WHERE id = $3 AND version = $4",
+		sentencePl, sentenceEn, exampleSentence.ID, exampleSentence.Version)
 
 	if err != nil {
 		return err
 	}
 
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("this example sentence has been modified by a different process")
+	}
+
 	exampleSentence.SentencePl = sentencePl
 	exampleSentence.SentenceEn = sentenceEn
+	exampleSentence.Version++
 
 	return nil
 

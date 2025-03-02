@@ -66,8 +66,8 @@ func (esr *ExampleSentenceRepositoryDB) UpdateExampleSentence(ctx context.Contex
 
 	var translationID string
 
-	err := esr.DB.QueryRowContext(ctx, "SELECT sentence_pl, sentence_en, translation_id FROM example_sentences WHERE id = $1", id).
-		Scan(&es.SentencePl, &es.SentenceEn, &translationID)
+	err := esr.DB.QueryRowContext(ctx, "SELECT sentence_pl, sentence_en, translation_id, version FROM example_sentences WHERE id = $1", id).
+		Scan(&es.SentencePl, &es.SentenceEn, &translationID, &es.Version)
 
 	if err != nil {
 		return nil, err

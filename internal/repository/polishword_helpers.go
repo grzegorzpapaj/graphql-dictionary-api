@@ -11,14 +11,14 @@ func (pwr *PolishWordRepositoryDB) fetchPolishWords(ctx context.Context, id *str
 
 	var fetchedPolishWord model.PolishWord
 	if id != nil {
-		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word FROM polish_words WHERE id = $1",
-			*id).Scan(&fetchedPolishWord.ID, &fetchedPolishWord.Word)
+		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word, version FROM polish_words WHERE id = $1",
+			*id).Scan(&fetchedPolishWord.ID, &fetchedPolishWord.Word, &fetchedPolishWord.Version)
 		if err != nil {
 			return nil, err
 		}
 	} else if word != nil {
-		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word FROM polish_words WHERE word = $1",
-			*word).Scan(&fetchedPolishWord.ID, &fetchedPolishWord.Word)
+		err := pwr.DB.QueryRowContext(ctx, "SELECT id, word, version FROM polish_words WHERE word = $1",
+			*word).Scan(&fetchedPolishWord.ID, &fetchedPolishWord.Word, &fetchedPolishWord.Version)
 		if err != nil {
 			return nil, err
 		}
