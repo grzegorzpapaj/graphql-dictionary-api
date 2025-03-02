@@ -18,11 +18,12 @@ func (esr *ExampleSentenceRepositoryDB) AddExampleSentence(ctx context.Context, 
 		SentenceEn: exampleSentence.SentenceEn,
 	}
 
-	id, err := esr.insertExampleSentence(ctx, translationID, newExampleSentence.SentencePl, newExampleSentence.SentenceEn)
+	id, version, err := esr.insertExampleSentence(ctx, translationID, newExampleSentence.SentencePl, newExampleSentence.SentenceEn)
 	if err != nil {
 		return nil, err
 	}
 	newExampleSentence.ID = id
+	newExampleSentence.Version = version
 
 	translation, err := esr.fetchTranslationAndPolishWord(ctx, translationID)
 	if err != nil {
@@ -40,8 +41,8 @@ func (esr *ExampleSentenceRepositoryDB) DeleteExampleSentence(ctx context.Contex
 		ID:          id,
 		Translation: &model.Translation{},
 	}
-	err := esr.DB.QueryRowContext(ctx, "DELETE FROM example_sentences WHERE id = $1 RETURNING sentence_pl, sentence_en, translation_id", id).
-		Scan(&deletedEs.SentencePl, &deletedEs.SentenceEn, &deletedEs.Translation.ID)
+	err := esr.DB.QueryRowContext(ctx, "DELETE FROM example_sentences WHERE id = $1 RETURNING sentence_pl, sentence_en, translation_id, version", id).
+		Scan(&deletedEs.SentencePl, &deletedEs.SentenceEn, &deletedEs.Translation.ID, &deletedEs.Version)
 
 	if err != nil {
 		return nil, err
@@ -96,8 +97,8 @@ func (esr *ExampleSentenceRepositoryDB) GetSingleExampleSentence(ctx context.Con
 
 	var translationID string
 
-	err := esr.DB.QueryRowContext(ctx, "SELECT sentence_pl, sentence_en, translation_id FROM example_sentences WHERE id = $1", id).
-		Scan(&es.SentencePl, &es.SentenceEn, &translationID)
+	err := esr.DB.QueryRowContext(ctx, "SELECT sentence_pl, sentence_en, translation_id, version FROM example_sentences WHERE id = $1", id).
+		Scan(&es.SentencePl, &es.SentenceEn, &translationID, &es.Version)
 
 	if err != nil {
 		return nil, err

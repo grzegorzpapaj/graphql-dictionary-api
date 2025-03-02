@@ -6,16 +6,18 @@ import (
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
 )
 
-func (esr *ExampleSentenceRepositoryDB) insertExampleSentence(ctx context.Context, translationID, sentencePl, sentenceEn string) (string, error) {
+func (esr *ExampleSentenceRepositoryDB) insertExampleSentence(ctx context.Context, translationID, sentencePl, sentenceEn string) (string, int, error) {
 	var id string
+	var version int
+
 	err := esr.DB.QueryRowContext(ctx,
-		"INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
+		"INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id, version",
 		sentencePl, sentenceEn, translationID,
-	).Scan(&id)
+	).Scan(&id, &version)
 	if err != nil {
-		return "", err
+		return "", -1, err
 	}
-	return id, nil
+	return id, version, nil
 }
 
 func (esr *ExampleSentenceRepositoryDB) fetchTranslationAndPolishWord(ctx context.Context, translationID string) (*model.Translation, error) {
@@ -23,11 +25,11 @@ func (esr *ExampleSentenceRepositoryDB) fetchTranslationAndPolishWord(ctx contex
 	var polishWord model.PolishWord
 
 	err := esr.DB.QueryRowContext(ctx, `
-		SELECT t.id, t.english_word, p.id, p.word
+		SELECT t.id, t.english_word, t.version, p.id, p.word, p.version
 		FROM translations t
 		JOIN polish_words p ON t.polish_word_id = p.id
 		WHERE t.id = $1`, translationID,
-	).Scan(&translation.ID, &translation.EnglishWord, &polishWord.ID, &polishWord.Word)
+	).Scan(&translation.ID, &translation.EnglishWord, &translation.Version, &polishWord.ID, &polishWord.Word, &polishWord.Version)
 	if err != nil {
 		return nil, err
 	}

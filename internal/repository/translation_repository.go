@@ -25,8 +25,8 @@ func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWor
 		ExampleSentences: []*model.ExampleSentence{},
 	}
 
-	err = tr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id",
-		newTranslation.EnglishWord, *targetPolishWordID).Scan(&newTranslation.ID)
+	err = tr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id, version",
+		newTranslation.EnglishWord, *targetPolishWordID).Scan(&newTranslation.ID, &newTranslation.Version)
 
 	if err != nil {
 		return nil, err
@@ -60,20 +60,22 @@ func (tr *TranslationRepositoryDB) DeleteTranslation(ctx context.Context, id str
 	var deletedTranslation model.Translation
 	deletedTranslation.PolishWord = &model.PolishWord{}
 
-	err := tr.DB.QueryRowContext(ctx, "DELETE FROM translations WHERE id = $1 RETURNING id, english_word, polish_word_id", id).
-		Scan(&deletedTranslation.ID, &deletedTranslation.EnglishWord, &deletedTranslation.PolishWord.ID)
+	err := tr.DB.QueryRowContext(ctx, "DELETE FROM translations WHERE id = $1 RETURNING id, english_word, polish_word_id, version", id).
+		Scan(&deletedTranslation.ID, &deletedTranslation.EnglishWord, &deletedTranslation.PolishWord.ID, &deletedTranslation.Version)
 
 	if err != nil {
 		return nil, err
 	}
 
 	var fetchedPolishWord string
-	err = tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1", deletedTranslation.PolishWord.ID).Scan(&fetchedPolishWord)
+	var fetchedPolishWordVersion int
+	err = tr.DB.QueryRowContext(ctx, "SELECT word, version FROM polish_words WHERE id = $1", deletedTranslation.PolishWord.ID).Scan(&fetchedPolishWord, &fetchedPolishWordVersion)
 
 	if err != nil {
 		return nil, err
 	}
 	deletedTranslation.PolishWord.Word = fetchedPolishWord
+	deletedTranslation.PolishWord.Version = fetchedPolishWordVersion
 
 	return &deletedTranslation, nil
 }
@@ -93,8 +95,8 @@ func (tr *TranslationRepositoryDB) UpdateTranslation(ctx context.Context, id str
 		return nil, err
 	}
 
-	err = tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1", translation.PolishWord.ID).
-		Scan(&translation.PolishWord.Word)
+	err = tr.DB.QueryRowContext(ctx, "SELECT word, version FROM polish_words WHERE id = $1", translation.PolishWord.ID).
+		Scan(&translation.PolishWord.Word, &translation.PolishWord.Version)
 
 	if err != nil {
 		return nil, err
@@ -107,15 +109,15 @@ func (tr *TranslationRepositoryDB) GetSingleTranslationByID(ctx context.Context,
 	var translation model.Translation
 	translation.PolishWord = &model.PolishWord{}
 
-	err := tr.DB.QueryRowContext(ctx, "SELECT id, english_word, polish_word_id FROM translations WHERE id = $1", id).
-		Scan(&translation.ID, &translation.EnglishWord, &translation.PolishWord.ID)
+	err := tr.DB.QueryRowContext(ctx, "SELECT id, english_word, polish_word_id, version FROM translations WHERE id = $1", id).
+		Scan(&translation.ID, &translation.EnglishWord, &translation.PolishWord.ID, &translation.Version)
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1", translation.PolishWord.ID).
-		Scan(&translation.PolishWord.Word)
+	err = tr.DB.QueryRowContext(ctx, "SELECT word, version FROM polish_words WHERE id = $1", translation.PolishWord.ID).
+		Scan(&translation.PolishWord.Word, &translation.PolishWord.Translations)
 
 	if err != nil {
 		return nil, err

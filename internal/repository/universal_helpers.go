@@ -85,7 +85,7 @@ func GetCurrentExampleSentencesFromDB(
 	translationID string,
 ) ([]*model.ExampleSentence, error) {
 	rows, err := db.QueryContext(ctx,
-		"SELECT id, sentence_pl, sentence_en FROM example_sentences WHERE translation_id = $1 ORDER BY id", translationID)
+		"SELECT id, sentence_pl, sentence_en, version FROM example_sentences WHERE translation_id = $1 ORDER BY id", translationID)
 
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func GetCurrentExampleSentencesFromDB(
 	var currentExampleSentencesFromDB []*model.ExampleSentence
 	for rows.Next() {
 		var es model.ExampleSentence
-		if err := rows.Scan(&es.ID, &es.SentencePl, &es.SentenceEn); err != nil {
+		if err := rows.Scan(&es.ID, &es.SentencePl, &es.SentenceEn, &es.Version); err != nil {
 			return nil, err
 		}
 
@@ -154,6 +154,7 @@ func InsertExampleSentence(
 	editEs *model.EditExampleSentenceInput) (*model.ExampleSentence, error) {
 
 	var newExampleSentenceID string
+	var newExampleSentenceVersion int
 	sentencePl := ""
 	sentenceEn := ""
 
@@ -166,8 +167,8 @@ func InsertExampleSentence(
 	}
 
 	err := db.QueryRowContext(ctx,
-		"INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id",
-		sentencePl, sentenceEn, translationID).Scan(&newExampleSentenceID)
+		"INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id, version",
+		sentencePl, sentenceEn, translationID).Scan(&newExampleSentenceID, &newExampleSentenceVersion)
 
 	if err != nil {
 		return nil, err
@@ -177,5 +178,6 @@ func InsertExampleSentence(
 		ID:         newExampleSentenceID,
 		SentencePl: sentencePl,
 		SentenceEn: sentenceEn,
+		Version:    newExampleSentenceVersion,
 	}, nil
 }

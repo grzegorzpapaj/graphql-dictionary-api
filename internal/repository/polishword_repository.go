@@ -20,7 +20,7 @@ func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord
 		Translations: []*model.Translation{},
 	}
 
-	err := pwr.DB.QueryRowContext(ctx, "INSERT INTO polish_words (word) VALUES ($1) RETURNING id", newPolishWord.Word).Scan(&newPolishWord.ID)
+	err := pwr.DB.QueryRowContext(ctx, "INSERT INTO polish_words (word) VALUES ($1) RETURNING id, version", newPolishWord.Word).Scan(&newPolishWord.ID, &newPolishWord.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -44,15 +44,15 @@ func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *str
 	var deletedPolishWord model.PolishWord
 
 	if id != nil {
-		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE id = $1 RETURNING id, word",
-			*id).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word)
+		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE id = $1 RETURNING id, word, version",
+			*id).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word, &deletedPolishWord.Version)
 
 		if err != nil {
 			return nil, err
 		}
 	} else if word != nil {
-		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE word = $1 RETURNING id, word",
-			*word).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word)
+		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE word = $1 RETURNING id, word, version",
+			*word).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word, &deletedPolishWord.Version)
 
 		if err != nil {
 			return nil, err
@@ -105,7 +105,7 @@ func (pwr *PolishWordRepositoryDB) UpdatePolishWord(ctx context.Context, id *str
 }
 
 func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*model.PolishWord, error) {
-	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, word FROM polish_words")
+	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, word, version FROM polish_words")
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (pwr *PolishWordRepositoryDB) GetAllPolishWords(ctx context.Context) ([]*mo
 	for rows.Next() {
 		var pw model.PolishWord
 
-		if err := rows.Scan(&pw.ID, &pw.Word); err != nil {
+		if err := rows.Scan(&pw.ID, &pw.Word, &pw.Version); err != nil {
 			return nil, err
 		}
 

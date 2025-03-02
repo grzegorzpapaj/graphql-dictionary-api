@@ -154,7 +154,7 @@ func (pwr *PolishWordRepositoryDB) insertTranslation(
 }
 
 func (pwr *PolishWordRepositoryDB) getTranslationsWithExampleSentences(ctx context.Context, polishWordID string) ([]*model.Translation, error) {
-	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
+	rows, err := pwr.DB.QueryContext(ctx, "SELECT id, english_word, version FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (pwr *PolishWordRepositoryDB) getTranslationsWithExampleSentences(ctx conte
 	for rows.Next() {
 
 		var tr model.Translation
-		if err := rows.Scan(&tr.ID, &tr.EnglishWord); err != nil {
+		if err := rows.Scan(&tr.ID, &tr.EnglishWord, &tr.Version); err != nil {
 			return nil, err
 		}
 

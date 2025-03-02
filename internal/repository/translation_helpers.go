@@ -28,14 +28,16 @@ func (tr *TranslationRepositoryDB) getTargetPolishWordID(ctx context.Context, po
 func (tr *TranslationRepositoryDB) prepareWordWithId(ctx context.Context, targetPolishWordID *string) (*model.PolishWord, error) {
 
 	var word string
-	err := tr.DB.QueryRowContext(ctx, "SELECT word FROM polish_words WHERE id = $1", *targetPolishWordID).Scan(&word)
+	var version int
+	err := tr.DB.QueryRowContext(ctx, "SELECT word, version FROM polish_words WHERE id = $1", *targetPolishWordID).Scan(&word, &version)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch polish word for id %s: %w", *targetPolishWordID, err)
 	}
 
 	return &model.PolishWord{
-		ID:   *targetPolishWordID,
-		Word: word,
+		ID:      *targetPolishWordID,
+		Word:    word,
+		Version: version,
 	}, nil
 }
