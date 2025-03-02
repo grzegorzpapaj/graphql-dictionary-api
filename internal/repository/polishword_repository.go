@@ -51,7 +51,7 @@ func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *str
 			return nil, err
 		}
 	} else if word != nil {
-		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE word = $1 RETUNING id, word",
+		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE word = $1 RETURNING id, word",
 			*word).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word)
 
 		if err != nil {
