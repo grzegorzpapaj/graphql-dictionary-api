@@ -97,7 +97,7 @@ func (pwr *PolishWordRepositoryDB) getCurrentTranslationsFromDB(
 	polishWordID string,
 ) ([]*model.Translation, error) {
 	rows, err := pwr.DB.QueryContext(ctx,
-		"SELECT id, english_word FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
+		"SELECT id, english_word, version FROM translations WHERE polish_word_id = $1 ORDER BY id", polishWordID)
 
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (pwr *PolishWordRepositoryDB) getCurrentTranslationsFromDB(
 	var currentTranslationsFromDB []*model.Translation
 	for rows.Next() {
 		var t model.Translation
-		if err := rows.Scan(&t.ID, &t.EnglishWord); err != nil {
+		if err := rows.Scan(&t.ID, &t.EnglishWord, &t.Version); err != nil {
 			return nil, err
 		}
 		currentTranslationsFromDB = append(currentTranslationsFromDB, &t)
