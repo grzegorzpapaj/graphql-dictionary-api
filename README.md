@@ -1,4 +1,4 @@
-# graphql-dictionary-api
+ graphql-dictionary-api
 System collecting translations of Polish words into English in a relational database with GraphQL API. The API allows end users to manage translations - create new ones, receive, modify and remove existing ones. A user is able to send a Polish word and its translation to English together with exemplary sentences presenting usage of the word. Multiple translations of a single word are possible.
 
 # Technologies
@@ -230,7 +230,7 @@ Alternatively, the user can add translations by ID field of Polish Word.
 Retrieving single translation by its ID:
 ```graph
 query retrieveSingleTranslationByID{
-  translation(id:"16") {
+  translation(id:"2") {
     id
     englishWord
     exampleSentences {
@@ -247,8 +247,42 @@ query retrieveSingleTranslationByID{
 
 Updating translation by ID:
 ```graph
-query retrieveSingleTranslationByID{
-  translation(id:"1") {
+mutation updateTranslationByID{
+  updateTranslation(
+    id:"2"
+  	edits: {
+      version: 1
+      englishWord: "updatedExample"
+      exampleSentences: [
+        {
+          version: 1
+          sentencePl: "Przykładowe zdanie z tłumaczeniem updatedExample"
+          sentenceEn: "Example sentence with translation updatedExample"
+        }
+      ]
+    }
+  ) {
+    id
+    englishWord
+    version
+    exampleSentences {
+      sentencePl
+      sentenceEn
+      version
+    }
+    polishWord {
+      id
+      word
+      version
+    }
+  }
+}
+```
+
+Deleting translation by ID:
+```graph
+mutation deleteTranslationByID {
+  deleteTranslation(id:"2") {
     id
     englishWord
     exampleSentences {
