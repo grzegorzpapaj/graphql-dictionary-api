@@ -1,6 +1,6 @@
 # GraphQL Dictionary API
 
-System collecting translations of Polish words into English in a relational database with GraphQL API. The API allows end users to manage translations - create new ones, receive, modify and remove existing ones. A user is able to send a Polish word and its translation to English together with exemplary sentences presenting usage of the word. Multiple translations of a single word are possible.
+System collecting translations of Polish words into English in a relational database with GraphQL API. The API allows end users to manage translations - create new ones, retrieve, modify and remove existing ones. A user is able to send a Polish word and its translation to English together with exemplary sentences presenting usage of the word. Multiple translations of a single word are possible.
 
 # Technologies
 - **Programming Language**: Go
@@ -27,7 +27,7 @@ cd graphql-dictionary-api
 ```
 
 ## Configuration
-Store all sensitive configuration in an .env file. Below is an example configuration
+Store all sensitive configuration in an .env file. Below is an example configuration:
 
 
 ```
@@ -53,10 +53,11 @@ The API exposes GraphQL endpoints for performing CRUD operations on database ent
 
 ## Example Mutations and Queries
 
-When running update queries provide a version which is accessible by running a query beforehand. This ensures optimistic concurrency control.
+When running update queries, provide a version which is accessible by running a query beforehand. This ensures optimistic concurrency control.
+Deletion is configured to CASCADE, meaning that when a record is deleted, all dependent records will also be removed.
 
 ### Polish Words
-Adding a polish word:
+Adding a Polish word:
 
 ```graph
 mutation addPolishWordMutation{
@@ -93,7 +94,7 @@ mutation addPolishWordMutation{
 }
 ```
 
-Retrieving all polish words:
+Retrieving all Polish words:
 ```graph
 query retrieveAllPolishWordsQuery {
 	polishWords {
@@ -115,7 +116,7 @@ query retrieveAllPolishWordsQuery {
 }
 ```
 
-Retrieving single polish word by word:
+Retrieving single Polish word by word:
 ```graph
 query retrieveSinglePolishWordByWordQuery {
   polishWord(word:"przykład"){
@@ -136,10 +137,10 @@ query retrieveSinglePolishWordByWordQuery {
   }
 }
 ```
-Alternatively, the user can retrieve a single polish word by ID.
+Alternatively, the user can retrieve a single Polish word by ID.
 
 
-Updating a polish word by word:
+Updating a Polish word by word:
 ```graph
 mutation updatePolishWordByWordMutation {
   updatePolishWord(
@@ -176,9 +177,9 @@ mutation updatePolishWordByWordMutation {
 }
 ```
 
-Alternatively, the user can update polish words by ID.
+Alternatively, the user can update Polish words by ID.
 
-Deleting a polish word:
+Deleting a Polish word:
 ```
 mutation deletePolishWordByWordMutation {
   deletePolishWord(word:"przykład") {
@@ -197,11 +198,11 @@ mutation deletePolishWordByWordMutation {
 }
 ```
 
-Alternatively, the user can delete polish words by ID.
+Alternatively, the user can delete Polish words by ID.
 
 
 ### Translations
-Adding a translation by the word field of Polish Word:
+Adding a translation by the word field of Polish word:
 ```
 mutation addTranslationByPolishwordWordMutation {
   addTranslation(
@@ -228,7 +229,7 @@ mutation addTranslationByPolishwordWordMutation {
 }
 ```
 
-Alternatively, the user can add translations by ID field of Polish Word.
+Alternatively, the user can add translations by ID field of Polish word.
 
 Retrieving single translation by its ID:
 ```graph
