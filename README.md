@@ -1,4 +1,5 @@
- graphql-dictionary-api
+# GraphQL Dictionary API
+
 System collecting translations of Polish words into English in a relational database with GraphQL API. The API allows end users to manage translations - create new ones, receive, modify and remove existing ones. A user is able to send a Polish word and its translation to English together with exemplary sentences presenting usage of the word. Multiple translations of a single word are possible.
 
 # Technologies
@@ -51,6 +52,8 @@ The API will be accessible at http://localhost:8080.
 The API exposes GraphQL endpoints for performing CRUD operations on database entries.
 
 ## Example Mutations and Queries
+
+When running update queries provide a version which is accessible by running a query beforehand. This ensures optimistic concurrency control.
 
 ### Polish Words
 Adding a polish word:
@@ -114,7 +117,7 @@ query retrieveAllPolishWordsQuery {
 
 Retrieving single polish word by word:
 ```graph
-query retrieveSinglePolishWordByWord {
+query retrieveSinglePolishWordByWordQuery {
   polishWord(word:"przykład"){
     id
     word
@@ -138,7 +141,7 @@ Alternatively, the user can retrieve a single polish word by ID.
 
 Updating a polish word by word:
 ```graph
-mutation updatePolishWordByWord {
+mutation updatePolishWordByWordMutation {
   updatePolishWord(
     word: "przykład"
     edits: {
@@ -177,7 +180,7 @@ Alternatively, the user can update polish words by ID.
 
 Deleting a polish word:
 ```
-mutation deletePolishWordByWord{
+mutation deletePolishWordByWordMutation {
   deletePolishWord(word:"przykład") {
   	 id
     word
@@ -200,7 +203,7 @@ Alternatively, the user can delete polish words by ID.
 ### Translations
 Adding a translation by the word field of Polish Word:
 ```
-mutation addTranslationByPolishwordWord{
+mutation addTranslationByPolishwordWordMutation {
   addTranslation(
     polishWord: "przykład"
     translation: {
@@ -229,7 +232,7 @@ Alternatively, the user can add translations by ID field of Polish Word.
 
 Retrieving single translation by its ID:
 ```graph
-query retrieveSingleTranslationByID{
+query retrieveSingleTranslationByIDQuery {
   translation(id:"2") {
     id
     englishWord
@@ -247,7 +250,7 @@ query retrieveSingleTranslationByID{
 
 Updating translation by ID:
 ```graph
-mutation updateTranslationByID{
+mutation updateTranslationByIDMutation {
   updateTranslation(
     id:"2"
   	edits: {
@@ -281,7 +284,7 @@ mutation updateTranslationByID{
 
 Deleting translation by ID:
 ```graph
-mutation deleteTranslationByID {
+mutation deleteTranslationByIDMutation {
   deleteTranslation(id:"2") {
     id
     englishWord
@@ -292,6 +295,116 @@ mutation deleteTranslationByID {
     polishWord {
       id
       word
+    }
+  }
+}
+```
+
+### Example Sentences
+
+Adding an example sentence by translation ID:
+```graph
+mutation addExampleSentenceMutation {
+  addExampleSentence(
+    translationId: "2"
+    exampleSentence: {
+      sentencePl: "Przykładowe zdanie PL"
+      sentenceEn: "Example sentence EN"
+    }
+  ) {
+    id
+    sentencePl
+    sentenceEn
+    translation {
+      id
+      englishWord
+      polishWord {
+        id
+        word
+      }
+    }
+  }
+}
+```
+
+Retrieving a single example sentence by its ID:
+```graph
+query retrieveExampleSentenceByIDQuery {
+  exampleSentence(id:"1") {
+    id
+    sentencePl
+    sentenceEn
+    translation {
+      id
+      englishWord
+      polishWord {
+        id
+        word
+      }
+    }
+  }
+}
+```
+
+Retrieving all example sentences by ID field of their translation:
+```graph
+query retrieveAllExampleSentencesByTranslationIDQuery {
+  exampleSentences(translationId:"1") {
+    id
+    sentencePl
+    sentenceEn
+    translation {
+      id
+      englishWord
+      polishWord {
+        id
+        word
+      }
+    }
+  }
+}
+```
+
+Updating an example sentence by its ID:
+```graph
+mutation updateExampleSentenceByIDMutation {
+  updateExampleSentence(
+    id: "1"
+    edits: {
+      version: 1
+      sentencePl: "Zaktualizowane zdanie PL"
+      sentenceEn: "Updated sentence EN"
+    }
+  ) {
+    id
+    sentencePl
+    sentenceEn
+    translation {
+      id
+      englishWord
+      polishWord {
+        id
+        word
+      }
+    }
+  }
+}
+```
+
+Deleting an example sentence by ID:
+```graph
+mutation deleteExampleSentenceByIDMutation {
+  deleteExampleSentence(id:"13"){
+    id
+    sentencePl
+    sentenceEn
+    translation {
+      id
+      englishWord
+      polishWord {
+        id
+        word
+      }
     }
   }
 }
