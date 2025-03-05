@@ -60,7 +60,15 @@ func (tr *TranslationRepositoryDB) DeleteTranslation(ctx context.Context, id str
 	var deletedTranslation model.Translation
 	deletedTranslation.PolishWord = &model.PolishWord{}
 
-	err := tr.DB.QueryRowContext(ctx, "DELETE FROM translations WHERE id = $1 RETURNING id, english_word, polish_word_id, version", id).
+	exampleSentences, err := GetCurrentExampleSentencesFromDB(ctx, tr.DB, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	deletedTranslation.ExampleSentences = exampleSentences
+
+	err = tr.DB.QueryRowContext(ctx, "DELETE FROM translations WHERE id = $1 RETURNING id, english_word, polish_word_id, version", id).
 		Scan(&deletedTranslation.ID, &deletedTranslation.EnglishWord, &deletedTranslation.PolishWord.ID, &deletedTranslation.Version)
 
 	if err != nil {
