@@ -183,7 +183,7 @@ Deleting a Polish word:
 ```graphql
 mutation deletePolishWordByWordMutation {
   deletePolishWord(word:"przykład") {
-  	id
+    id
     word
       translations {
         id
