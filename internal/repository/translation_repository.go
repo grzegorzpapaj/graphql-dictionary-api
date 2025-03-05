@@ -117,7 +117,7 @@ func (tr *TranslationRepositoryDB) GetSingleTranslationByID(ctx context.Context,
 	}
 
 	err = tr.DB.QueryRowContext(ctx, "SELECT word, version FROM polish_words WHERE id = $1", translation.PolishWord.ID).
-		Scan(&translation.PolishWord.Word, &translation.PolishWord.Translations)
+		Scan(&translation.PolishWord.Word, &translation.PolishWord.Version)
 
 	if err != nil {
 		return nil, err
