@@ -180,7 +180,7 @@ mutation updatePolishWordByWordMutation {
 Alternatively, the user can update Polish words by ID.
 
 Deleting a Polish word:
-```
+```graphql
 mutation deletePolishWordByWordMutation {
   deletePolishWord(word:"przykład") {
   	 id
@@ -203,7 +203,7 @@ Alternatively, the user can delete Polish words by ID.
 
 ### Translations
 Adding a translation by the word field of Polish word:
-```
+```graphql
 mutation addTranslationByPolishwordWordMutation {
   addTranslation(
     polishWord: "przykład"
