@@ -97,7 +97,7 @@ mutation addPolishWordMutation{
 Retrieving all Polish words:
 ```graphql
 query retrieveAllPolishWordsQuery {
-	polishWords {
+  polishWords {
     id
     word
     version
@@ -183,15 +183,15 @@ Deleting a Polish word:
 ```graphql
 mutation deletePolishWordByWordMutation {
   deletePolishWord(word:"przykład") {
-  	 id
+  	id
     word
-      	translations {
-      id
-      englishWord
-      exampleSentences {
+      translations {
         id
-        sentencePl
-        sentenceEn
+        englishWord
+        exampleSentences {
+          id
+          sentencePl
+          sentenceEn
       }
     }
   }
