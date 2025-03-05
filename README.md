@@ -9,7 +9,7 @@ System collecting translations of Polish words into English in a relational data
 - **Containerization**: Docker, Docker Compose
 
 # Data Model
-[ERD diagram here]
+![ERD diagram](./docs/diagram.png)
 
 Additionally, version columns were added to every table to provide optimistic concurrency control.
 
