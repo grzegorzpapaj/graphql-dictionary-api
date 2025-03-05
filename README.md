@@ -59,7 +59,7 @@ Deletion is configured to CASCADE, meaning that when a record is deleted, all de
 ### Polish Words
 Adding a Polish word:
 
-```graph
+```graphql
 mutation addPolishWordMutation{
   addPolishWord(polishWord: {
     word:"przykład"
@@ -95,7 +95,7 @@ mutation addPolishWordMutation{
 ```
 
 Retrieving all Polish words:
-```graph
+```graphql
 query retrieveAllPolishWordsQuery {
 	polishWords {
     id
@@ -117,7 +117,7 @@ query retrieveAllPolishWordsQuery {
 ```
 
 Retrieving single Polish word by word:
-```graph
+```graphql
 query retrieveSinglePolishWordByWordQuery {
   polishWord(word:"przykład"){
     id
@@ -141,7 +141,7 @@ Alternatively, the user can retrieve a single Polish word by ID.
 
 
 Updating a Polish word by word:
-```graph
+```graphql
 mutation updatePolishWordByWordMutation {
   updatePolishWord(
     word: "przykład"
@@ -232,7 +232,7 @@ mutation addTranslationByPolishwordWordMutation {
 Alternatively, the user can add translations by ID field of Polish word.
 
 Retrieving single translation by its ID:
-```graph
+```graphql
 query retrieveSingleTranslationByIDQuery {
   translation(id:"2") {
     id
@@ -250,7 +250,7 @@ query retrieveSingleTranslationByIDQuery {
 ```
 
 Updating translation by ID:
-```graph
+```graphql
 mutation updateTranslationByIDMutation {
   updateTranslation(
     id:"2"
@@ -284,7 +284,7 @@ mutation updateTranslationByIDMutation {
 ```
 
 Deleting translation by ID:
-```graph
+```graphql
 mutation deleteTranslationByIDMutation {
   deleteTranslation(id:"2") {
     id
@@ -304,7 +304,7 @@ mutation deleteTranslationByIDMutation {
 ### Example Sentences
 
 Adding an example sentence by translation ID:
-```graph
+```graphql
 mutation addExampleSentenceMutation {
   addExampleSentence(
     translationId: "2"
@@ -329,7 +329,7 @@ mutation addExampleSentenceMutation {
 ```
 
 Retrieving a single example sentence by its ID:
-```graph
+```graphql
 query retrieveExampleSentenceByIDQuery {
   exampleSentence(id:"1") {
     id
@@ -348,7 +348,7 @@ query retrieveExampleSentenceByIDQuery {
 ```
 
 Retrieving all example sentences by ID field of their translation:
-```graph
+```graphql
 query retrieveAllExampleSentencesByTranslationIDQuery {
   exampleSentences(translationId:"1") {
     id
@@ -367,7 +367,7 @@ query retrieveAllExampleSentencesByTranslationIDQuery {
 ```
 
 Updating an example sentence by its ID:
-```graph
+```graphql
 mutation updateExampleSentenceByIDMutation {
   updateExampleSentence(
     id: "1"
@@ -393,7 +393,7 @@ mutation updateExampleSentenceByIDMutation {
 ```
 
 Deleting an example sentence by ID:
-```graph
+```graphql
 mutation deleteExampleSentenceByIDMutation {
   deleteExampleSentence(id:"13"){
     id
