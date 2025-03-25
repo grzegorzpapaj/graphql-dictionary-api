@@ -15,6 +15,11 @@ type PolishWordRepositoryDB struct {
 
 func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord model.AddPolishWordInput) (*model.PolishWord, error) {
 
+	existing, _ := pwr.GetSinglePolishWord(ctx, nil, &polishWord.Word)
+	if existing != nil {
+		return nil, fmt.Errorf("polish word already exists")
+	}
+
 	newPolishWord := &model.PolishWord{
 		Word:         polishWord.Word,
 		Translations: []*model.Translation{},
