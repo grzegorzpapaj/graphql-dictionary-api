@@ -21,7 +21,7 @@ Additionally, version columns were added to every table to provide optimistic co
 
 ## Clone the repository
 
-```
+```bash
 git clone https://github.com/grzegorzpapaj/graphql-dictionary-api.git
 cd graphql-dictionary-api
 ```
@@ -30,17 +30,18 @@ cd graphql-dictionary-api
 Store all sensitive configuration in an .env file. Below is an example configuration:
 
 
-```
+```env
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=password
 DB_NAME=dictionary-db
+PORT=8080
 ```
 
 ## Running the Application
 
-```
+```bash
 docker-compose up -d
 go run main.go
 ```
