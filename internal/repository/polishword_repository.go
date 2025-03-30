@@ -15,34 +15,40 @@ type PolishWordRepositoryDB struct {
 
 func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord model.AddPolishWordInput) (*model.PolishWord, error) {
 
-	existing, _ := pwr.GetSinglePolishWord(ctx, nil, &polishWord.Word)
-	if existing != nil {
-		return nil, fmt.Errorf("polish word already exists")
-	}
+	var pw model.PolishWord
 
-	newPolishWord := &model.PolishWord{
-		Word:         polishWord.Word,
-		Translations: []*model.Translation{},
-	}
+	err := pwr.DB.QueryRowContext(ctx, `
+			WITH ins AS (
+				INSERT INTO polish_words (word)
+				VALUES ($1)
+				ON CONFLICT (word) DO NOTHING
+				RETURNING id, version
+			)
+			SELECT id, version FROM ins
+			UNION ALL
+			SELECT id, version FROM polish_words WHERE word = $1
+			LIMIT 1	
+			`, polishWord.Word).Scan(&pw.ID, &pw.Version)
 
-	err := pwr.DB.QueryRowContext(ctx, "INSERT INTO polish_words (word) VALUES ($1) RETURNING id, version", newPolishWord.Word).Scan(&newPolishWord.ID, &newPolishWord.Version)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to upsert polish word: %w", err)
 	}
+
+	pw.Word = polishWord.Word
+	pw.Translations = []*model.Translation{}
 
 	for _, t := range polishWord.Translations {
 
-		newTranslation, err := pwr.TranslationRepo.AddTranslation(ctx, &newPolishWord.ID, &polishWord.Word, t)
+		newTranslation, err := pwr.TranslationRepo.AddTranslation(ctx, &pw.ID, &pw.Word, t)
 
 		if err != nil {
 			return nil, err
 		}
 
-		newPolishWord.Translations = append(newPolishWord.Translations, newTranslation)
-
+		pw.Translations = append(pw.Translations, newTranslation)
 	}
 
-	return newPolishWord, nil
+	return &pw, nil
 }
 
 func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error) {
