@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
 )
@@ -25,11 +26,23 @@ func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWor
 		ExampleSentences: []*model.ExampleSentence{},
 	}
 
-	err = tr.DB.QueryRowContext(ctx, "INSERT INTO translations(english_word, polish_word_id) VALUES ($1, $2) RETURNING id, version",
+	err = tr.DB.QueryRowContext(ctx, `
+		WITH ins AS (
+			INSERT INTO translations (english_word, polish_word_id)
+			VALUES ($1, $2)
+			ON CONFLICT (polish_word_id, english_word) DO NOTHING
+			RETURNING id, version
+		)
+		SELECT id, version FROM ins
+		UNION ALL
+		SELECT id, version FROM translations
+		WHERE english_word = $1 AND polish_word_id = $2
+		LIMIT 1
+	`,
 		newTranslation.EnglishWord, *targetPolishWordID).Scan(&newTranslation.ID, &newTranslation.Version)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to upsert translation: %w", err)
 	}
 
 	if polishWord != nil {
