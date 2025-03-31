@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/grzegorzpapaj/graphql-dictionary-api/internal/graph/model"
 )
@@ -11,11 +12,23 @@ func (esr *ExampleSentenceRepositoryDB) insertExampleSentence(ctx context.Contex
 	var version int
 
 	err := esr.DB.QueryRowContext(ctx,
-		"INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id) VALUES ($1, $2, $3) RETURNING id, version",
+		`
+		WITH ins AS (
+			INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id)
+			VALUES($1, $2, $3)
+			ON CONFLICT (translation_id, sentence_pl, sentence_en) DO NOTHING
+			RETURNING id, version
+		)
+		SELECT id, version FROM ins
+		UNION ALL
+		SELECT id, version FROM example_sentences
+		WHERE sentence_pl = $1 AND sentence_en = $2 AND translation_id = $3
+		LIMIT 1
+		`,
 		sentencePl, sentenceEn, translationID,
 	).Scan(&id, &version)
 	if err != nil {
-		return "", -1, err
+		return "", -1, fmt.Errorf("failed to upsert example sentence: %w", err)
 	}
 	return id, version, nil
 }
