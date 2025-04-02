@@ -27,17 +27,12 @@ func (tr *TranslationRepositoryDB) AddTranslation(ctx context.Context, polishWor
 	}
 
 	err = tr.DB.QueryRowContext(ctx, `
-		WITH ins AS (
+		
 			INSERT INTO translations (english_word, polish_word_id)
 			VALUES ($1, $2)
-			ON CONFLICT (polish_word_id, english_word) DO NOTHING
+			ON CONFLICT (polish_word_id, english_word) DO UPDATE SET english_word = EXCLUDED.english_word
 			RETURNING id, version
-		)
-		SELECT id, version FROM ins
-		UNION ALL
-		SELECT id, version FROM translations
-		WHERE english_word = $1 AND polish_word_id = $2
-		LIMIT 1
+		
 	`,
 		newTranslation.EnglishWord, *targetPolishWordID).Scan(&newTranslation.ID, &newTranslation.Version)
 

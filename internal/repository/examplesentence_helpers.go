@@ -13,17 +13,12 @@ func (esr *ExampleSentenceRepositoryDB) insertExampleSentence(ctx context.Contex
 
 	err := esr.DB.QueryRowContext(ctx,
 		`
-		WITH ins AS (
+		
 			INSERT INTO example_sentences (sentence_pl, sentence_en, translation_id)
 			VALUES($1, $2, $3)
-			ON CONFLICT (translation_id, sentence_pl, sentence_en) DO NOTHING
+			ON CONFLICT (translation_id, sentence_pl, sentence_en) DO UPDATE SET translation_id = EXCLUDED.translation_id
 			RETURNING id, version
-		)
-		SELECT id, version FROM ins
-		UNION ALL
-		SELECT id, version FROM example_sentences
-		WHERE sentence_pl = $1 AND sentence_en = $2 AND translation_id = $3
-		LIMIT 1
+		
 		`,
 		sentencePl, sentenceEn, translationID,
 	).Scan(&id, &version)

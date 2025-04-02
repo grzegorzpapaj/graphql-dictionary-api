@@ -18,16 +18,13 @@ func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord
 	var pw model.PolishWord
 
 	err := pwr.DB.QueryRowContext(ctx, `
-			WITH ins AS (
+			
 				INSERT INTO polish_words (word)
 				VALUES ($1)
-				ON CONFLICT (word) DO NOTHING
+				ON CONFLICT (word) DO UPDATE SET word = EXCLUDED.word
 				RETURNING id, version
-			)
-			SELECT id, version FROM ins
-			UNION ALL
-			SELECT id, version FROM polish_words WHERE word = $1
-			LIMIT 1	
+			
+			
 			`, polishWord.Word).Scan(&pw.ID, &pw.Version)
 
 	if err != nil {
@@ -53,6 +50,19 @@ func (pwr *PolishWordRepositoryDB) AddPolishWord(ctx context.Context, polishWord
 
 func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *string, word *string) (*model.PolishWord, error) {
 	var deletedPolishWord model.PolishWord
+
+	id, err := pwr.TranslationRepo.getTargetPolishWordID(ctx, id, word)
+
+	if err != nil {
+		return nil, err
+	}
+
+	translations, err := pwr.getTranslationsWithExampleSentences(ctx, *id)
+	if err != nil {
+		return nil, err
+	}
+
+	deletedPolishWord.Translations = translations
 
 	if id != nil {
 		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE id = $1 RETURNING id, word, version",
