@@ -57,6 +57,8 @@ func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *str
 		return nil, err
 	}
 
+	deletedPolishWord.ID = *id
+
 	translations, err := pwr.getTranslationsWithExampleSentences(ctx, *id)
 	if err != nil {
 		return nil, err
@@ -64,22 +66,10 @@ func (pwr *PolishWordRepositoryDB) DeletePolishWord(ctx context.Context, id *str
 
 	deletedPolishWord.Translations = translations
 
-	if id != nil {
-		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE id = $1 RETURNING id, word, version",
-			*id).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word, &deletedPolishWord.Version)
-
-		if err != nil {
-			return nil, err
-		}
-	} else if word != nil {
-		err := pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE word = $1 RETURNING id, word, version",
-			*word).Scan(&deletedPolishWord.ID, &deletedPolishWord.Word, &deletedPolishWord.Version)
-
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, fmt.Errorf("either id or word must be provided")
+	err = pwr.DB.QueryRowContext(ctx, "DELETE FROM polish_words WHERE id = $1 RETURNING id, word, version",
+		*id).Scan(id, &deletedPolishWord.Word, &deletedPolishWord.Version)
+	if err != nil {
+		return nil, err
 	}
 
 	return &deletedPolishWord, nil
